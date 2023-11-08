@@ -1,24 +1,11 @@
 <script>
+  import MainLayout from "./MainLayout.svelte";
   import PropertiesOverview from "./PropertiesOverview.svelte";
-
 </script>
-<div class="main-dashboard">
-  <div class="top-bar">
-    <div class="center">Holistay</div>
-    <div class="notifications">Notifications</div>
-  </div>
-  <nav>
-    <li>Property Manager</li>
-    <li>Bookings</li>
-  </nav>
 
-  <div class="main-content">
-    <div class="property-overview">
-      <PropertiesOverview />
-    </div>
-  </div>
-  
-</div>
+<MainLayout>
+  <PropertiesOverview />
+</MainLayout>
 
 <style lang="scss">
   .main-dashboard {
@@ -36,7 +23,7 @@
     nav {
       display: flex;
       justify-content: flex-end;
-      
+
       li {
         list-style: none;
         padding: 16px;

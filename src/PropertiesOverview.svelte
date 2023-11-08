@@ -4,19 +4,29 @@
   export let properties = [];
   export let error = false;
   import { Properties } from "./lib/test_data/properties";
-    import PropertyOverview from "./PropertyOverview.svelte";
+  import PropertyOverview from "./PropertyOverview.svelte";
+  import { push } from "svelte-spa-router";
 
   onMount(() => {
     properties = Properties.data;
+    if (properties.length == 1) {
+      push("/property/" + properties[0].id);
+    }
+    if (properties.length == 0) {
+      //TODO: Take them to create a property
+      // push("/property/" + properties[0].id);
+    }
   });
 </script>
 
 <div class="properties-overview">
-  <h2>Properties</h2>
   {#if properties.length > 0}
-    {#each properties as property}
-      <PropertyOverview {property} />
-    {/each}
+    <h2>Select your property:</h2>
+    <div class="property-overview-container">
+      {#each properties as property}
+        <PropertyOverview {property} />
+      {/each}
+    </div>
   {:else if !error}
     <p>Loading..</p>
   {:else}
@@ -26,9 +36,16 @@
 
 <style lang="scss">
   .properties-overview {
+    display: flex;
+    flex-wrap: wrap;
     background: lightgray;
     border-radius: 16px;
     padding: 16px;
     color: black;
+
+    .property-overview-container {
+      display: flex;
+      flex-wrap: wrap;
+    }
   }
 </style>
