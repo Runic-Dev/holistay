@@ -4,6 +4,12 @@
   import { onMount } from "svelte";
   let onClickFunc: () => Promise<void> | void;
   export let tileConfig: TileConfig;
+  let newRoomGroupName: string = "";
+
+  function confirmNewRoomGroup() {
+    tileConfig.type = TileType.Default;
+    tileConfig.title = newRoomGroupName;
+  }
 
   onMount(() => {
     if (!tileConfig.clickAction) {
@@ -17,17 +23,18 @@
 {#if tileConfig.type == TileType.Default}
   <div
     on:keydown={() => tileConfig.clickAction()}
-    on:click={() => onClickFunc()}
+    on:click={() => tileConfig.clickAction()}
     class="tile"
     style="background-image: url({tileConfig.imageUrl});"
   >
-    <h4 class="name">{name}</h4>
+    <h4 class="name">{tileConfig.title}</h4>
     <div class="overlay" />
   </div>
 {:else if tileConfig.type == TileType.NewRoomGroup}
-  <div class="tile">
+  <div class="tile newRoomGroup">
     <label for="roomGroupName">RoomGroup name:</label>
-    <input id="roomGroupName" type="text" />
+    <input bind:value={newRoomGroupName} id="roomGroupName" type="text" />
+    <button on:click={() => confirmNewRoomGroup()}>Create</button>
     <div class="overlay" />
   </div>
 {/if}
@@ -37,6 +44,17 @@
   .tile {
     position: relative;
     @include tile;
+
+    &.newRoomGroup {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+
+      input, button {
+        z-index: 5;
+      }
+    }
   }
   .overlay {
     position: absolute;

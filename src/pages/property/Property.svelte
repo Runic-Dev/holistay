@@ -46,7 +46,6 @@
           <RoomGroup {roomGroup} />
         {/each}
         {#if addingNewRoomGroup}
-          <NewRoomGroup />
           <Tile
             tileConfig={{
               type: TileType.NewRoomGroup,
