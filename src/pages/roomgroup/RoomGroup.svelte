@@ -3,6 +3,7 @@
     import { Properties } from "../../lib/test_data/properties";
     import MainLayout from "../../MainLayout.svelte";
     import type { Property } from "src/types";
+    import { TileType } from "../../../src/enums/ui";
     import Description from "./Description.svelte";
     import Tile from "../../../src/common/Tile.svelte";
     import { push } from "svelte-spa-router";
@@ -29,7 +30,12 @@
       <h4>Rooms</h4>
       <div class="room-plan-container">
         {#each roomGroup.rooms as room}
-          <Tile on:click={() => push(`/room/${room.id}`)} name={room.name} imageUrl={room.imageUrl}/>
+          <Tile tileConfig={{
+            type: TileType.Default,
+            title: room.name,
+            imageUrl: room.imageUrl,
+            clickAction: () => push(`/room/${room.id}`)
+          }}/>
         {/each}
       </div>
     </div>

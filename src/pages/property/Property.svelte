@@ -1,9 +1,13 @@
 <script lang="ts">
   import { Properties } from "../../lib/test_data/properties";
+
   import type { Property } from "src/types";
+  import { TileType } from "../../enums/ui";
   import MainLayout from "../../MainLayout.svelte";
   import RoomGroup from "./RoomGroup.svelte";
+  import NewRoomGroup from "./NewRoomGroup.svelte";
   import { onMount } from "svelte";
+  import Tile from "../../common/Tile.svelte";
 
   export let params: { propertyId: string };
 
@@ -38,13 +42,19 @@
         </button>
       </div>
       <div class="room-groups content-container">
-        {#if property.roomGroups.length > 0}
-          {#each property.roomGroups as roomGroup}
-            <RoomGroup {roomGroup} />
-          {/each}
-          {#if addingNewRoomGroup}
-            <RoomGroup on:cancelNewRoomGroup={toggleNewRoomGroup} />
-          {/if}
+        {#each property.roomGroups as roomGroup}
+          <RoomGroup {roomGroup} />
+        {/each}
+        {#if addingNewRoomGroup}
+          <NewRoomGroup />
+          <Tile
+            tileConfig={{
+              type: TileType.NewRoomGroup,
+              title: null,
+              imageUrl: null,
+              clickAction: null
+            }}
+          />
         {/if}
       </div>
     </div>

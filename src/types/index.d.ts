@@ -38,3 +38,11 @@ export enum Bed {
   Queen,
   King
 }
+
+export type TileConfig = {
+  type: TileType,
+  title: string | null,
+  imageUrl: string | null,
+  clickAction: null | (() => void | Promise<void>)
+}
+

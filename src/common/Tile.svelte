@@ -1,17 +1,36 @@
 <script lang="ts">
-  export let onClickFunc: () => Promise<void>;
-  export let imageUrl: string;
-  export let name: string;
+  import type { TileConfig } from "src/types";
+  import { TileType } from "../enums/ui";
+  import { onMount } from "svelte";
+  let onClickFunc: () => Promise<void> | void;
+  export let tileConfig: TileConfig;
+
+  onMount(() => {
+    if (!tileConfig.clickAction) {
+      onClickFunc = () => {};
+      return;
+    }
+    onClickFunc = tileConfig.clickAction;
+  });
 </script>
-<div
-  on:keydown={() => onClickFunc()}
-  on:click={() => onClickFunc()}
-  class="tile"
-  style="background-image: url({imageUrl});"
->
-  <h4 class="name">{name}</h4>
-  <div class="overlay" />
-</div>
+
+{#if tileConfig.type == TileType.Default}
+  <div
+    on:keydown={() => tileConfig.clickAction()}
+    on:click={() => onClickFunc()}
+    class="tile"
+    style="background-image: url({tileConfig.imageUrl});"
+  >
+    <h4 class="name">{name}</h4>
+    <div class="overlay" />
+  </div>
+{:else if tileConfig.type == TileType.NewRoomGroup}
+  <div class="tile">
+    <label for="roomGroupName">RoomGroup name:</label>
+    <input id="roomGroupName" type="text" />
+    <div class="overlay" />
+  </div>
+{/if}
 
 <style lang="scss">
   @import "./src/lib/app.scss";

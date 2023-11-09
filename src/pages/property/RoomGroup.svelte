@@ -5,6 +5,8 @@
   import { createEventDispatcher } from "svelte";
   import Tile from "../../../src/common/Tile.svelte";
   import { roomGroupRepository } from "../../../src/store";
+  import type { TileConfig } from "src/types";
+  import { TileType } from "../../../src/enums/ui";
 
   const dispatch = createEventDispatcher();
   let newRoomGroupName: string = "";
@@ -20,35 +22,19 @@
     roomGroupRepository.save(newRoomGroup);
   }
 
+  let tileConfig: TileConfig = {
+    type: TileType.Default,
+    title: roomGroup.name,
+    imageUrl: roomGroup.imageUrl,
+    clickAction: () => push(roomGroupLink)
+  }
+
   onMount(() => {
     roomGroupLink = `/roomgroup/${roomGroup.id}`;
   });
 </script>
 
-{#if !roomGroup}
-  <div class="room-group new-room-group">
-    <div class="new-name">
-      <label for="new-room-group-name">Name your new RoomGroup:</label>
-      <input
-        bind:value={newRoomGroupName}
-        id="new-room-group-name"
-        type="text"
-      />
-      <button on:click={saveRoomGroup} class="confirm-new-room-group"
-        >Save</button
-      >
-      <button on:click={cancelNewRoomGroup} class="cancel-new-room-group"
-        >Cancel</button
-      >
-    </div>
-  </div>
-{:else}
-  <Tile
-    onClickFunc={() => push(roomGroupLink)}
-    imageUrl={roomGroup.imageUrl}
-    name={roomGroup.name}
-  />
-{/if}
+<Tile {tileConfig} />
 
 <style lang="scss">
   @import "./src/lib/app.scss";
