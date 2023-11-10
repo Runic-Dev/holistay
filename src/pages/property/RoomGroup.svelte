@@ -1,26 +1,13 @@
 <script lang="ts">
-  import RoomGroup from "../../../src/models/RoomGroup";
+  import type RoomGroup from "../../../src/models/RoomGroup";
   import { onMount } from "svelte";
   import { push } from "svelte-spa-router";
-  import { createEventDispatcher } from "svelte";
   import Tile from "../../../src/common/Tile.svelte";
-  import { roomGroupRepository } from "../../../src/store";
   import type { TileConfig } from "src/types";
   import { TileType } from "../../../src/enums/ui";
 
-  const dispatch = createEventDispatcher();
-  let newRoomGroupName: string = "";
   export let roomGroupLink: string = "";
   export let roomGroup: RoomGroup;
-
-  function cancelNewRoomGroup() {
-    dispatch("cancelNewRoomGroup");
-  }
-
-  function saveRoomGroup() {
-    let newRoomGroup = new RoomGroup(newRoomGroupName);
-    roomGroupRepository.save(newRoomGroup);
-  }
 
   let tileConfig: TileConfig = {
     type: TileType.Default,

@@ -25,6 +25,14 @@
 
 <MainLayout header={roomGroup.name} {imageUrl}>
   <div class="room-group-container content-container">
+    <div class="image-section">
+      <h4>Image</h4>
+      {#if roomGroup.imageUrl == "" || roomGroup.imageUrl == null}
+        <button>Upload Image</button>
+      {:else}
+        <button>Change Image</button>
+      {/if}
+    </div>
     <Description description={roomGroup.description} />
     <div class="room-plan">
       <h4>Rooms</h4>
