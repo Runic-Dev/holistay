@@ -1,5 +1,6 @@
-import type { IsSaveable } from "src/lib/database"
-import type { Room } from "src/types"
+import type { IsSaveable } from "src/lib/database";
+import type { Room } from "src/types";
+import { v4 as uuid } from "uuid";
 
 export default class RoomGroup implements IsSaveable {
   public id: string
@@ -9,14 +10,7 @@ export default class RoomGroup implements IsSaveable {
   public rooms: Room[]
 
   constructor(name: string) {
-    this.id = "";
+    this.id = uuid();
     this.name = name;
-  }
-
-  static BlankRoomGroup(): RoomGroup {
-    const roomGroup = new RoomGroup("Add RoomGroup");
-    roomGroup.id = "blank-roomgroup";
-    roomGroup.description = "Add RoomGroup";
-    return roomGroup;
   }
 }

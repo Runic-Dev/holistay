@@ -1,13 +1,13 @@
 <script lang="ts">
   import { Properties } from "../../lib/test_data/properties";
 
-  import type { Property } from "src/types";
+  import type { Property, TileConfig } from "src/types";
   import { TileType } from "../../enums/ui";
   import MainLayout from "../../MainLayout.svelte";
-  import RoomGroup from "./RoomGroup.svelte";
-  import NewRoomGroup from "./NewRoomGroup.svelte";
+  import RoomGroupComponent from "./RoomGroup.svelte";
   import { onMount } from "svelte";
   import Tile from "../../common/Tile.svelte";
+  import RoomGroup from "../../models/RoomGroup";
 
   export let params: { propertyId: string };
 
@@ -22,13 +22,24 @@
       }`
     : "There was an issue loading the Property";
 
+  $: roomGroupArray = [];
+
   function toggleNewRoomGroup() {
     addingNewRoomGroup = !addingNewRoomGroup;
+  }
+
+  function addNewRoomGroup(event: CustomEvent<TileConfig>) {
+    let newRoomGroup = new RoomGroup(event.detail.title);
+    let newRoomGroupArray = roomGroupArray;
+    newRoomGroupArray.push(newRoomGroup);
+    roomGroupArray = newRoomGroupArray;
+    toggleNewRoomGroup();
   }
 
   onMount(() => {
     let properties: Property[] = Properties.data;
     property = properties.filter((p) => p.id == params.propertyId).at(0);
+    roomGroupArray = property.roomGroups;
   });
 </script>
 
@@ -42,8 +53,8 @@
         </button>
       </div>
       <div class="room-groups content-container">
-        {#each property.roomGroups as roomGroup}
-          <RoomGroup {roomGroup} />
+        {#each roomGroupArray as roomGroup}
+          <RoomGroupComponent {roomGroup} />
         {/each}
         {#if addingNewRoomGroup}
           <Tile
@@ -53,6 +64,7 @@
               imageUrl: null,
               clickAction: null
             }}
+            on:confirmedRoomGroup={addNewRoomGroup}
           />
         {/if}
       </div>

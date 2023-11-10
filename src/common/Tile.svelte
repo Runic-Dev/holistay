@@ -1,14 +1,17 @@
 <script lang="ts">
   import type { TileConfig } from "src/types";
   import { TileType } from "../enums/ui";
-  import { onMount } from "svelte";
+  import { onMount, createEventDispatcher } from "svelte";
   let onClickFunc: () => Promise<void> | void;
   export let tileConfig: TileConfig;
   let newRoomGroupName: string = "";
 
+  const dispatch = createEventDispatcher();
+
   function confirmNewRoomGroup() {
     tileConfig.type = TileType.Default;
     tileConfig.title = newRoomGroupName;
+    dispatch("confirmedRoomGroup", tileConfig);
   }
 
   onMount(() => {
@@ -34,7 +37,7 @@
   <div class="tile newRoomGroup">
     <label for="roomGroupName">RoomGroup name:</label>
     <input bind:value={newRoomGroupName} id="roomGroupName" type="text" />
-    <button on:click={() => confirmNewRoomGroup()}>Create</button>
+    <button on:click={confirmNewRoomGroup}>Create</button>
     <div class="overlay" />
   </div>
 {/if}
