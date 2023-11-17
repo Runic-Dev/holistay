@@ -10,12 +10,6 @@ use uuid::Uuid;
 
 mod db;
 
-// Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
-
 #[tauri::command]
 fn get_properties(holistay_state: tauri::State<HolistayState>) -> serde_json::Value {
     json!(holistay_state.properties)
@@ -23,13 +17,16 @@ fn get_properties(holistay_state: tauri::State<HolistayState>) -> serde_json::Va
 
 struct HolistayState {
     properties: Vec<Property>,
-    conn_pool: Mutex<Pool<Sqlite>>
+    conn_pool: Mutex<Pool<Sqlite>>,
 }
 
 impl HolistayState {
     pub fn new(conn_pool: Pool<Sqlite>) -> Self {
         let mutex_pool = Mutex::from(conn_pool);
-        Self { properties: vec![], conn_pool: mutex_pool }
+        Self {
+            properties: vec![],
+            conn_pool: mutex_pool,
+        }
     }
 }
 
@@ -82,18 +79,17 @@ struct Contact {
 #[derive(Serialize)]
 struct RoomGroup {}
 
-fn main() {
-    tauri::async_runtime::spawn(async {
-        match db::init().await {
-            Ok(pool) => {
-                tauri::Builder::default()
-                    .setup(|_app| Ok(()))
-                    .manage(HolistayState::new(pool))
-                    .invoke_handler(tauri::generate_handler![greet])
-                    .run(tauri::generate_context!())
-                    .expect("error while running tauri application");
-            }
-            Err(err) => panic!("Unable to initialize application: {}", err),
+#[tokio::main]
+async fn main() {
+    match db::init().await {
+        Ok(pool) => {
+            tauri::Builder::default()
+                .setup(|_app| Ok(()))
+                .manage(HolistayState::new(pool))
+                .invoke_handler(tauri::generate_handler![get_properties])
+                .run(tauri::generate_context!())
+                .expect("error while running tauri application");
         }
-    });
+        Err(err) => panic!("Unable to initialize application: {}", err),
+    }
 }
