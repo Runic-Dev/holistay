@@ -9,6 +9,22 @@ const CREATE_ROOM_GROUP_TABLE: &str = "
     )
 ";
 
+const CREATE_PROPERTY_TABLE: &str = "
+    CREATE TABLE IF NOT EXISTS property (
+        id TEXT NOT NULL,
+        name TEXT NOT NULL,
+        description TEXT NOT NULL,
+    )
+";
+
+const CREATE_PROPERTY_ROOM_GROUP_TABLE: &str = "
+    CREATE TABLE IF NOT EXISTS property_room_group (
+        id TEXT NOT NULL,
+        property_id TEXT NOT NULL, 
+        room_group_id TEXT NOT NULL
+    )
+";
+
 pub async fn init() -> Result<SqlitePool, sqlx::Error> {
     const DB_URL: &str = "sqlite:sqlite.db";
 
@@ -19,6 +35,7 @@ pub async fn init() -> Result<SqlitePool, sqlx::Error> {
 
     let pool = SqlitePool::connect(DB_URL).await?;
     sqlx::query(CREATE_ROOM_GROUP_TABLE).execute(&pool).await?;
+    sqlx::query(CREATE_PROPERTY_TABLE).execute(&pool).await?;
+    sqlx::query(CREATE_PROPERTY_ROOM_GROUP_TABLE).execute(&pool).await?;
     Ok(pool)
 }
-
