@@ -10,3 +10,4 @@ impl Default for NoCurrentUser {
         Self { message: "No user logged in".to_string() }
     }
 }
+

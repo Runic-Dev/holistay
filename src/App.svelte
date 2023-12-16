@@ -12,6 +12,7 @@
     "/room/:roomId": Room,
     "*": Dashboard,
   };
+
 </script>
 
 <main class="container">

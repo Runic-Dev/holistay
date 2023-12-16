@@ -1,54 +1,65 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::sync::Mutex;
+use events::CanConfigureEvents;
+use tauri::{EventLoopMessage, Event};
+use tokio::sync::mpsc::Sender;
 
+use serde::{Deserialize, Serialize};
+use sqlx::FromRow;
+use tokio::sync::Mutex;
+
+pub mod events;
 mod models;
 pub mod responses;
 
-use models::User;
-use responses::{CurrentUserResponse, errors::NoCurrentUser};
-use serde::{Deserialize, Serialize};
-use serde_json::{Value};
-use sqlx::{FromRow, Pool, Sqlite};
+use models::user::User;
+use sqlx::{Pool, Sqlite};
 use uuid::Uuid;
 
 mod db;
 
-// #[tauri::command]
-// async fn get_properties(holistay_state: tauri::State<HolistayState>) -> serde_json::Value {
-//     let response = match holistay_state.conn_pool.lock() {
-//         Ok(conn_lock) => {
-//             let query = sqlx::query_as::<_, Property>("SELECT * FROM property")
-//                 .fetch(&conn_lock)
-//                 .await;
-//             todo!();
-//         }
-//         Err(_) => todo!(),
-//     };
-// }
-
 #[tauri::command]
-async fn get_current_user(holistay_state: tauri::State<'_, HolistayState>) -> Result<CurrentUserResponse, NoCurrentUser> {
-    match holistay_state.current_user.lock() {
-        Ok(user_option) => {
-            Ok(user_option.as_ref().map_or_else(|| NoCurrentUser, |current_user| Ok(CurrentUserResponse)))
-        },
-        Err(err) => Ok(json!(format!("Failed to lock current user: {:?}", err))),
-    }
+fn get_current_user(holistay_state: tauri::State<'_, HolistayState>) {
+    tauri::async_runtime::spawn(async {
+        let current_user_lock = holistay_state.current_user.lock().await;
+        if let Some(current_user) = *current_user_lock {
+            holistay_state
+                .event_channel
+                .send(HolistayEvent::UpdateLoggedInUser(current_user));
+        } else {
+            holistay_state
+                .event_channel
+                .send(HolistayEvent::NoLoggedInUser);
+        };
+    });
+}
+
+struct RegisterUserData {
+    username: String,
+    password: String,
+}
+
+enum HolistayEvent {
+    UpdateLoggedInUser(User),
+    Error(String),
+    NoLoggedInUser,
+    RegisterAttempt(Event),
 }
 
 struct HolistayState {
     conn_pool: Mutex<Pool<Sqlite>>,
     current_user: Mutex<Option<User>>,
+    event_channel: Sender<HolistayEvent>,
 }
 
 impl HolistayState {
-    pub fn new(conn_pool: Pool<Sqlite>) -> Self {
+    pub fn new(conn_pool: Pool<Sqlite>, event_channel: Sender<HolistayEvent>) -> Self {
         let mutex_pool = Mutex::from(conn_pool);
         Self {
             conn_pool: mutex_pool,
             current_user: Mutex::from(None),
+            event_channel,
         }
     }
 }
@@ -112,13 +123,24 @@ struct Contact {
 #[derive(Serialize, Deserialize)]
 struct RoomGroup {}
 
+#[derive(Deserialize)]
+struct RegisterAttempt {
+    username: String,
+    password: String,
+}
+
 #[tokio::main]
 async fn main() {
     match db::init().await {
         Ok(pool) => {
+            let (tx, rx) = tokio::sync::mpsc::channel(32);
             tauri::Builder::default()
-                .setup(|_app| Ok(()))
-                .manage(HolistayState::new(pool))
+                .manage(HolistayState::new(pool, tx))
+                .setup(move |app| {
+                    app.configure_event_listening();
+                    app.configure_event_sending(rx);
+                    Ok(())
+                })
                 .invoke_handler(tauri::generate_handler![get_current_user])
                 .run(tauri::generate_context!())
                 .expect("error while running tauri application");

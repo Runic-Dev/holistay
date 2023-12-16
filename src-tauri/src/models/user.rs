@@ -3,11 +3,23 @@ use serde::{
     ser::SerializeStruct,
     Deserialize, Serialize,
 };
+use serde_json::Value;
 use uuid::Uuid;
 
+use crate::responses::{HasHolistayResponse, HolistayResponse};
+
+#[derive(Clone)]
 pub struct User {
     id: Uuid,
     username: String,
+}
+
+impl User {
+    pub fn new(id: Uuid, username: String) -> Self {
+        Self {
+            id, username
+        }
+    }
 }
 
 impl Serialize for User {
@@ -51,7 +63,7 @@ impl<'de> Visitor<'de> for UserVisitor {
                         Ok(parsed_id) => id = Some(parsed_id),
                         Err(_) => {
                             return Err(de::Error::custom("Unable to parse Uuid from given string"))
-                        },
+                        }
                     }
                 }
                 "username" => {
@@ -76,5 +88,11 @@ impl<'de> Deserialize<'de> for User {
         D: serde::Deserializer<'de>,
     {
         deserializer.deserialize_map(UserVisitor)
+    }
+}
+
+impl HasHolistayResponse<User> for Option<User> {
+    fn to_response(self, value: Value) -> crate::responses::HolistayResponse<User> {
+        HolistayResponse::new(value, self)
     }
 }

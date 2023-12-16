@@ -34,8 +34,5 @@ pub async fn init() -> Result<SqlitePool, sqlx::Error> {
     }
 
     let pool = SqlitePool::connect(DB_URL).await?;
-    sqlx::query(CREATE_ROOM_GROUP_TABLE).execute(&pool).await?;
-    sqlx::query(CREATE_PROPERTY_TABLE).execute(&pool).await?;
-    sqlx::query(CREATE_PROPERTY_ROOM_GROUP_TABLE).execute(&pool).await?;
     Ok(pool)
 }
