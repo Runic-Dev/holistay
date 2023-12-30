@@ -1,7 +1,7 @@
-import { LocalStorageDatabase, RoomGroupRepo, type Database, type Repository } from "./lib/database";
-import type RoomGroup from "./models/RoomGroup";
+import { writable } from 'svelte/store';
 
-const database: Database = new LocalStorageDatabase(localStorage);
+export const userStore = writable({
+    user: null
+});
 
-export const roomGroupRepository: Repository<RoomGroup> = new RoomGroupRepo(database);
 

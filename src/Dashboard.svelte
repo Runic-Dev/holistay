@@ -1,19 +1,15 @@
-<script>
-    import { invoke } from "@tauri-apps/api/tauri";
+<script lang="ts">
     import MainLayout from "./MainLayout.svelte";
     import PropertiesOverview from "./PropertiesOverview.svelte";
-    import { onMount } from "svelte";
     import InitScreen from "./InitScreen.svelte";
-    import { listen } from "@tauri-apps/api/event";
+    import { userStore } from "./store";
 
-    let loggedInUser = null;
-
-    onMount(async () => {
-        await listen("user_logged_in", (payload) => {
-            console.log(payload);
-            loggedInUser = payload;
-        });
-    });
+    $: loggedInUser = $userStore.user;
+    $: if (loggedInUser) {
+        console.log($userStore);
+    } else {
+        console.log("No user");
+    }
 </script>
 
 <MainLayout>
