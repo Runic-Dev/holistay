@@ -1,9 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use events::CanConfigureEvents;
-use tauri::{EventLoopMessage, Event};
-use tokio::sync::mpsc::Sender;
+use tauri::Manager;
 
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
@@ -17,49 +15,28 @@ use models::user::User;
 use sqlx::{Pool, Sqlite};
 use uuid::Uuid;
 
+use crate::events::register_user;
+
 mod db;
-
-#[tauri::command]
-fn get_current_user(holistay_state: tauri::State<'_, HolistayState>) {
-    tauri::async_runtime::spawn(async {
-        let current_user_lock = holistay_state.current_user.lock().await;
-        if let Some(current_user) = *current_user_lock {
-            holistay_state
-                .event_channel
-                .send(HolistayEvent::UpdateLoggedInUser(current_user));
-        } else {
-            holistay_state
-                .event_channel
-                .send(HolistayEvent::NoLoggedInUser);
-        };
-    });
-}
-
-struct RegisterUserData {
-    username: String,
-    password: String,
-}
 
 enum HolistayEvent {
     UpdateLoggedInUser(User),
     Error(String),
     NoLoggedInUser,
-    RegisterAttempt(Event),
+    RegisterAttempt(RegisterAttempt),
 }
 
 struct HolistayState {
     conn_pool: Mutex<Pool<Sqlite>>,
     current_user: Mutex<Option<User>>,
-    event_channel: Sender<HolistayEvent>,
 }
 
 impl HolistayState {
-    pub fn new(conn_pool: Pool<Sqlite>, event_channel: Sender<HolistayEvent>) -> Self {
+    pub fn new(conn_pool: Pool<Sqlite>) -> Self {
         let mutex_pool = Mutex::from(conn_pool);
         Self {
             conn_pool: mutex_pool,
             current_user: Mutex::from(None),
-            event_channel,
         }
     }
 }
@@ -123,25 +100,71 @@ struct Contact {
 #[derive(Serialize, Deserialize)]
 struct RoomGroup {}
 
-#[derive(Deserialize)]
-struct RegisterAttempt {
+#[derive(Deserialize, Clone)]
+pub struct RegisterAttempt {
     username: String,
     password: String,
+}
+
+#[derive(Serialize, Clone)]
+struct LoggedInUser {
+    username: String,
 }
 
 #[tokio::main]
 async fn main() {
     match db::init().await {
         Ok(pool) => {
-            let (tx, rx) = tokio::sync::mpsc::channel(32);
+            if let Err(err) = sqlx::migrate!("./src/db/migrations/").run(&pool).await {
+                panic!("Failed to run migrations: {:?}", err);
+            }
+            let (tx, mut rx) = tokio::sync::mpsc::channel::<HolistayEvent>(32);
             tauri::Builder::default()
-                .manage(HolistayState::new(pool, tx))
+                .manage(HolistayState::new(pool.clone()))
                 .setup(move |app| {
-                    app.configure_event_listening();
-                    app.configure_event_sending(rx);
+                    let app_handle = app.app_handle();
+                    app.listen_global("register_attempt", move |event| {
+                        let payload = event.payload().expect("Argh there's no bladdy payload");
+                        let register_attempt: RegisterAttempt = serde_json::from_str(payload)
+                            .expect("Couldn't parse struct from payload");
+                        let register_event = HolistayEvent::RegisterAttempt(register_attempt);
+                        let tx_clone = tx.clone();
+                        tauri::async_runtime::spawn(async move {
+                            let _ = tx_clone.send(register_event).await;
+                        });
+                    });
+                    let mutex_pool = Mutex::new(pool);
+                    tauri::async_runtime::spawn(async move {
+                        while let Some(holistay_event) = rx.recv().await {
+                            match holistay_event {
+                                HolistayEvent::UpdateLoggedInUser(_) => todo!(),
+                                HolistayEvent::Error(_) => todo!(),
+                                HolistayEvent::NoLoggedInUser => todo!(),
+                                HolistayEvent::RegisterAttempt(register_attempt) => {
+                                    let pool_lock = mutex_pool.lock().await;
+                                    let _ = match register_user(
+                                        pool_lock.clone(),
+                                        register_attempt.clone(),
+                                    )
+                                    .await
+                                    {
+                                        Ok(_) => {
+                                            println!("Sending out event!");
+                                            Ok(app_handle.emit_all(
+                                                "user_logged_in",
+                                                LoggedInUser {
+                                                    username: register_attempt.username,
+                                                },
+                                            ))
+                                        }
+                                        Err(err) => Err(println!("{:?}", err)),
+                                    };
+                                }
+                            }
+                        }
+                    });
                     Ok(())
                 })
-                .invoke_handler(tauri::generate_handler![get_current_user])
                 .run(tauri::generate_context!())
                 .expect("error while running tauri application");
         }

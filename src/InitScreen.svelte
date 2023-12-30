@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { appWindow } from '@tauri-apps/api/window';
+  import { emit } from '@tauri-apps/api/event';
   let isRegister = true;
 
   let username = "",
@@ -20,8 +20,9 @@
   }
 
   function submitForm() {
-    let eventType = isRegister ? 'register_attempt' : 'login_attempt';
-    appWindow.emit(eventType, { username, password });
+      emit("register_attempt", {
+          username, password
+      });
   }
 </script>
 

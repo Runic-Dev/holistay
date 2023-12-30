@@ -1,30 +1,5 @@
 use sqlx::{migrate::MigrateDatabase, Sqlite, SqlitePool};
 
-const CREATE_ROOM_GROUP_TABLE: &str = "
-    CREATE TABLE IF NOT EXISTS room_groups (
-        id TEXT NOT NULL,
-        name TEXT NOT NULL,
-        description TEXT NOT NULL,
-        image_url TEXT NOT NULL
-    )
-";
-
-const CREATE_PROPERTY_TABLE: &str = "
-    CREATE TABLE IF NOT EXISTS property (
-        id TEXT NOT NULL,
-        name TEXT NOT NULL,
-        description TEXT NOT NULL,
-    )
-";
-
-const CREATE_PROPERTY_ROOM_GROUP_TABLE: &str = "
-    CREATE TABLE IF NOT EXISTS property_room_group (
-        id TEXT NOT NULL,
-        property_id TEXT NOT NULL, 
-        room_group_id TEXT NOT NULL
-    )
-";
-
 pub async fn init() -> Result<SqlitePool, sqlx::Error> {
     const DB_URL: &str = "sqlite:sqlite.db";
 
