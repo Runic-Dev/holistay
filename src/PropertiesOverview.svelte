@@ -6,6 +6,8 @@
   import { Properties } from "./lib/test_data/properties";
   import PropertyOverview from "./PropertyOverview.svelte";
   import { push } from "svelte-spa-router";
+    import Tile from "./common/Tile.svelte";
+    import { TileType } from "./enums/ui";
 
   onMount(() => {
     properties = Properties.data;
@@ -26,6 +28,7 @@
       {#each properties as property}
         <PropertyOverview {property} />
       {/each}
+        <Tile tileConfig={{ type: TileType.NewProperty, title: null, imageUrl: null, clickAction: null }}/>
     </div>
   {:else if !error}
     <p>Loading..</p>

@@ -1,4 +1,5 @@
 export enum TileType {
   Default,
-  NewRoomGroup
+  NewRoomGroup,
+  NewProperty
 }

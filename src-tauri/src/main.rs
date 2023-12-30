@@ -1,6 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use events::login_user;
 use tauri::Manager;
 
 use serde::{Deserialize, Serialize};
@@ -23,7 +24,8 @@ enum HolistayEvent {
     UpdateLoggedInUser(User),
     Error(String),
     NoLoggedInUser,
-    RegisterAttempt(RegisterAttempt),
+    RegisterAttempt(LoginRegisterAttempt),
+    LoginAttempt(LoginRegisterAttempt),
 }
 
 struct HolistayState {
@@ -101,7 +103,7 @@ struct Contact {
 struct RoomGroup {}
 
 #[derive(Deserialize, Clone)]
-pub struct RegisterAttempt {
+pub struct LoginRegisterAttempt {
     username: String,
     password: String,
 }
@@ -123,14 +125,25 @@ async fn main() {
                 .manage(HolistayState::new(pool.clone()))
                 .setup(move |app| {
                     let app_handle = app.app_handle();
+                    let tx_clone = tx.clone();
                     app.listen_global("register_attempt", move |event| {
                         let payload = event.payload().expect("Argh there's no bladdy payload");
-                        let register_attempt: RegisterAttempt = serde_json::from_str(payload)
+                        let register_attempt: LoginRegisterAttempt = serde_json::from_str(payload)
                             .expect("Couldn't parse struct from payload");
                         let register_event = HolistayEvent::RegisterAttempt(register_attempt);
-                        let tx_clone = tx.clone();
+                        let tx_clone = tx_clone.clone();
                         tauri::async_runtime::spawn(async move {
                             let _ = tx_clone.send(register_event).await;
+                        });
+                    });
+                    app.listen_global("login_attempt", move |event| {
+                        let payload = event.payload().expect("Argh there's no bladdy payload");
+                        let login_attempt: LoginRegisterAttempt = serde_json::from_str(payload)
+                            .expect("Couldn't parse struct from payload");
+                        let login_event = HolistayEvent::LoginAttempt(login_attempt);
+                        let tx_clone = tx.clone();
+                        tauri::async_runtime::spawn(async move {
+                            let _ = tx_clone.send(login_event).await;
                         });
                     });
                     let mutex_pool = Mutex::new(pool);
@@ -159,6 +172,21 @@ async fn main() {
                                         }
                                         Err(err) => Err(println!("{:?}", err)),
                                     };
+                                }
+                                HolistayEvent::LoginAttempt(login_attempt) => {
+                                    let pool_lock = mutex_pool.lock().await;
+                                    let _ =
+                                        match login_user(pool_lock.clone(), login_attempt.clone())
+                                            .await
+                                        {
+                                            Ok(user) => Ok(app_handle.emit_all(
+                                                "user_logged_in",
+                                                LoggedInUser {
+                                                    username: user.username,
+                                                },
+                                            )),
+                                            Err(err) => Err(println!("{:?}", err)),
+                                        };
                                 }
                             }
                         }

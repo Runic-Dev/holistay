@@ -4,14 +4,29 @@ use serde::{
     Deserialize, Serialize,
 };
 use serde_json::Value;
+use sqlx::{prelude::FromRow, sqlite::SqliteRow};
+use sqlx::{Error, Row};
 use uuid::Uuid;
 
 use crate::responses::{HasHolistayResponse, HolistayResponse};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct User {
-    id: Uuid,
-    username: String,
+    pub id: Uuid,
+    pub username: String,
+}
+
+impl FromRow<'_, SqliteRow> for User {
+    fn from_row(row: &SqliteRow) -> Result<Self, Error> {
+        let id_str: String = row.try_get("id")?;
+        let id = Uuid::parse_str(&id_str)
+            .map_err(|_| Error::RowNotFound)?;
+
+        Ok(User {
+            id,
+            username: row.try_get("username")?,
+        })
+    }
 }
 
 impl User {

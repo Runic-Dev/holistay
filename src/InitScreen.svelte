@@ -20,7 +20,8 @@
   }
 
   function submitForm() {
-      emit("register_attempt", {
+      let event_name = isRegister ? "register_attempt" : "login_attempt";
+      emit(event_name, {
           username, password
       });
   }

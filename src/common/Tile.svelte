@@ -5,6 +5,7 @@
   let onClickFunc: () => Promise<void> | void;
   export let tileConfig: TileConfig;
   let newRoomGroupName: string = "";
+  let propertyName: string = "";
 
   const dispatch = createEventDispatcher();
 
@@ -40,6 +41,13 @@
     <button on:click={confirmNewRoomGroup}>Create</button>
     <div class="overlay" />
   </div>
+{:else if tileConfig.type == TileType.NewProperty}
+  <div class="tile newProperty">
+    <label for="propertyName">Property name:</label>
+    <input bind:value={propertyName} id="propertyName" type="text" />
+    <button on:click={confirmNewRoomGroup}>Create</button>
+    <div class="overlay" />
+  </div>
 {/if}
 
 <style lang="scss">
@@ -48,7 +56,7 @@
     position: relative;
     @include tile;
 
-    &.newRoomGroup {
+    &.newRoomGroup, .newProperty {
       display: flex;
       flex-direction: column;
       align-items: center;

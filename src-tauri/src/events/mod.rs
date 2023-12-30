@@ -2,11 +2,11 @@ use sqlx::{Pool, Sqlite};
 
 use uuid::Uuid;
 
-use crate::RegisterAttempt;
+use crate::{models::user::User, LoginRegisterAttempt};
 
 pub async fn register_user(
     conn_pool: Pool<Sqlite>,
-    register_attempt: RegisterAttempt,
+    register_attempt: LoginRegisterAttempt,
 ) -> Result<(), sqlx::Error> {
     match conn_pool.begin().await {
         Ok(mut tran) => {
@@ -38,4 +38,15 @@ pub async fn register_user(
         }
         Err(err) => Err(err),
     }
+}
+
+pub async fn login_user(
+    conn_pool: Pool<Sqlite>,
+    login_attempt: LoginRegisterAttempt,
+) -> Result<User, sqlx::Error> {
+    sqlx::query_as::<Sqlite, User>("SELECT * FROM user INNER JOIN auth ON user.username = auth.username WHERE user.username = ? AND auth.password = ?")
+        .bind(login_attempt.username)
+        .bind(login_attempt.password)
+        .fetch_one(&conn_pool)
+        .await 
 }
