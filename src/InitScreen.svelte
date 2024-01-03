@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { emit } from '@tauri-apps/api/event';
+  import { emit } from "@tauri-apps/api/event";
   let isRegister = true;
 
   let username = "",
@@ -12,6 +12,11 @@
 
   $: submitButtonText = isRegister ? "Register" : "Login";
 
+  $: canSubmit =
+    password != "" && username != "" ? password == repeatPassword : false;
+
+  $: redField = (password != repeatPassword) && username != "" && password != "" && repeatPassword != "";
+
   function toggleForm() {
     username = "";
     password = "";
@@ -20,10 +25,11 @@
   }
 
   function submitForm() {
-      let event_name = isRegister ? "register_attempt" : "login_attempt";
-      emit(event_name, {
-          username, password
-      });
+    let event_name = isRegister ? "register_attempt" : "login_attempt";
+    emit(event_name, {
+      username,
+      password,
+    });
   }
 </script>
 
@@ -40,7 +46,12 @@
         <label for="register-password">Password</label>
         <input id="register-password" bind:value={password} type="password" />
         <label for="register-repeat-password">Repeat Password</label>
-        <input id="register-repeat-password" bind:value={repeatPassword} type="password" />
+        <input
+          id="register-repeat-password"
+          class:red-highlight={redField}
+          bind:value={repeatPassword}
+          type="password"
+        />
       </div>
     {:else}
       <div class="login form">
@@ -52,7 +63,11 @@
     {/if}
 
     <button on:click={toggleForm}>{toggleButtonText}</button>
-    <button on:click={submitForm}>{submitButtonText}</button>
+    <button
+      disabled={!canSubmit}
+      class:disabled={!canSubmit}
+      on:click={submitForm}>{submitButtonText}</button
+    >
   </div>
 </div>
 
@@ -68,6 +83,17 @@
       padding: 15px;
       max-width: 50%;
       border-radius: 15px;
+
+      .disabled {
+        color: grey;
+        &:hover {
+          border: none;
+        }
+      }
+
+      .red-highlight {
+        border: solid 1px red;
+      }
 
       .form {
         display: flex;

@@ -1,52 +1,93 @@
+mod auth;
+
+use tokio::sync::{
+    mpsc::{Receiver, Sender},
+    Mutex,
+};
+
 use sqlx::{Pool, Sqlite};
 
-use uuid::Uuid;
+use tauri::{App, AppHandle, Manager};
 
-use crate::{models::user::User, LoginRegisterAttempt};
+use crate::{
+    models::LoginRegisterAttempt,
+    models::{user::User, LoggedInUser},
+};
 
-pub async fn register_user(
-    conn_pool: Pool<Sqlite>,
-    register_attempt: LoginRegisterAttempt,
-) -> Result<(), sqlx::Error> {
-    match conn_pool.begin().await {
-        Ok(mut tran) => {
-            let id = Uuid::new_v4();
+use self::auth::{login_user, register_user};
 
-            if let Err(err) = sqlx::query("INSERT INTO user (id, username) VALUES (?,?)")
-                .bind(id.clone().to_string())
-                .bind(register_attempt.username.clone())
-                .execute(&mut *tran)
-                .await
-            {
-                println!("Error inserting user into user table: {:?}", err);
-            }
-            if let Err(err) =
-                sqlx::query("INSERT INTO auth (id, username, password) VALUES (?,?,?)")
-                    .bind(Uuid::new_v4().to_string())
-                    .bind(register_attempt.username.clone())
-                    .bind(register_attempt.password)
-                    .execute(&mut *tran)
-                    .await
-            {
-                println!("Error inserting user into auth table: {:?}", err);
-            }
-
-            match tran.commit().await {
-                Ok(_) => Ok(()),
-                Err(err) => Err(err),
-            }
-        }
-        Err(err) => Err(err),
-    }
+pub enum HolistayEvent {
+    UpdateLoggedInUser(User),
+    Error(String),
+    NoLoggedInUser,
+    RegisterAttempt(LoginRegisterAttempt),
+    LoginAttempt(LoginRegisterAttempt),
 }
 
-pub async fn login_user(
-    conn_pool: Pool<Sqlite>,
-    login_attempt: LoginRegisterAttempt,
-) -> Result<User, sqlx::Error> {
-    sqlx::query_as::<Sqlite, User>("SELECT * FROM user INNER JOIN auth ON user.username = auth.username WHERE user.username = ? AND auth.password = ?")
-        .bind(login_attempt.username)
-        .bind(login_attempt.password)
-        .fetch_one(&conn_pool)
-        .await 
+pub fn listen_to_frontend(app: &mut App, tx: Sender<HolistayEvent>) {
+    let tx_clone = tx.clone();
+    app.listen_global("register_attempt", move |event| {
+        let payload = event.payload().expect("Argh there's no bladdy payload");
+        let register_attempt: LoginRegisterAttempt =
+            serde_json::from_str(payload).expect("Couldn't parse struct from payload");
+        let register_event = HolistayEvent::RegisterAttempt(register_attempt);
+        let tx_clone = tx_clone.clone();
+        tauri::async_runtime::spawn(async move {
+            let _ = tx_clone.send(register_event).await;
+        });
+    });
+    app.listen_global("login_attempt", move |event| {
+        let payload = event.payload().expect("Argh there's no bladdy payload");
+        let login_attempt: LoginRegisterAttempt =
+            serde_json::from_str(payload).expect("Couldn't parse struct from payload");
+        let login_event = HolistayEvent::LoginAttempt(login_attempt);
+        let tx_clone = tx.clone();
+        tauri::async_runtime::spawn(async move {
+            let _ = tx_clone.send(login_event).await;
+        });
+    });
+}
+
+pub fn holistay_event_handler(
+    app_handle: AppHandle,
+    pool: Pool<Sqlite>,
+    mut rx: Receiver<HolistayEvent>,
+) {
+    let mutex_pool = Mutex::from(pool);
+    tauri::async_runtime::spawn(async move {
+        while let Some(holistay_event) = rx.recv().await {
+            match holistay_event {
+                HolistayEvent::UpdateLoggedInUser(_) => todo!(),
+                HolistayEvent::Error(_) => todo!(),
+                HolistayEvent::NoLoggedInUser => todo!(),
+                HolistayEvent::RegisterAttempt(register_attempt) => {
+                    let pool_lock = mutex_pool.lock().await;
+                    let _ = match register_user(pool_lock.clone(), register_attempt.clone()).await {
+                        Ok(_) => {
+                            println!("Sending out event!");
+                            Ok(app_handle.emit_all(
+                                "user_logged_in",
+                                LoggedInUser {
+                                    username: register_attempt.username,
+                                },
+                            ))
+                        }
+                        Err(err) => Err(println!("{:?}", err)),
+                    };
+                }
+                HolistayEvent::LoginAttempt(login_attempt) => {
+                    let pool_lock = mutex_pool.lock().await;
+                    let _ = match login_user(pool_lock.clone(), login_attempt.clone()).await {
+                        Ok(user) => Ok(app_handle.emit_all(
+                            "user_logged_in",
+                            LoggedInUser {
+                                username: user.username,
+                            },
+                        )),
+                        Err(err) => Err(println!("{:?}", err)),
+                    };
+                }
+            }
+        }
+    });
 }
