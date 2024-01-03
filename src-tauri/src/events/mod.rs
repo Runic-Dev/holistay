@@ -18,7 +18,7 @@ pub async fn register_user(
                 .execute(&mut *tran)
                 .await
             {
-                println!("Error on query 1: {:?}", err);
+                println!("Error inserting user into user table: {:?}", err);
             }
             if let Err(err) =
                 sqlx::query("INSERT INTO auth (id, username, password) VALUES (?,?,?)")
@@ -28,7 +28,7 @@ pub async fn register_user(
                     .execute(&mut *tran)
                     .await
             {
-                println!("Error on query 2: {:?}", err);
+                println!("Error inserting user into auth table: {:?}", err);
             }
 
             match tran.commit().await {

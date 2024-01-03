@@ -2,6 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use events::login_user;
+use startup::listen_to_frontend;
 use tauri::Manager;
 
 use serde::{Deserialize, Serialize};
@@ -11,6 +12,7 @@ use tokio::sync::Mutex;
 pub mod events;
 mod models;
 pub mod responses;
+pub mod startup;
 
 use models::user::User;
 use sqlx::{Pool, Sqlite};
@@ -20,7 +22,7 @@ use crate::events::register_user;
 
 mod db;
 
-enum HolistayEvent {
+pub enum HolistayEvent {
     UpdateLoggedInUser(User),
     Error(String),
     NoLoggedInUser,
@@ -125,27 +127,7 @@ async fn main() {
                 .manage(HolistayState::new(pool.clone()))
                 .setup(move |app| {
                     let app_handle = app.app_handle();
-                    let tx_clone = tx.clone();
-                    app.listen_global("register_attempt", move |event| {
-                        let payload = event.payload().expect("Argh there's no bladdy payload");
-                        let register_attempt: LoginRegisterAttempt = serde_json::from_str(payload)
-                            .expect("Couldn't parse struct from payload");
-                        let register_event = HolistayEvent::RegisterAttempt(register_attempt);
-                        let tx_clone = tx_clone.clone();
-                        tauri::async_runtime::spawn(async move {
-                            let _ = tx_clone.send(register_event).await;
-                        });
-                    });
-                    app.listen_global("login_attempt", move |event| {
-                        let payload = event.payload().expect("Argh there's no bladdy payload");
-                        let login_attempt: LoginRegisterAttempt = serde_json::from_str(payload)
-                            .expect("Couldn't parse struct from payload");
-                        let login_event = HolistayEvent::LoginAttempt(login_attempt);
-                        let tx_clone = tx.clone();
-                        tauri::async_runtime::spawn(async move {
-                            let _ = tx_clone.send(login_event).await;
-                        });
-                    });
+                    listen_to_frontend(app, tx);
                     let mutex_pool = Mutex::new(pool);
                     tauri::async_runtime::spawn(async move {
                         while let Some(holistay_event) = rx.recv().await {
