@@ -4,13 +4,13 @@ use serde_json::Value;
 pub mod errors;
 
 #[derive(Serialize)]
-pub struct HolistayResponse<T: Serialize> {
+pub struct HolistayResponse<T> {
     message: Value, 
     body: Option<T>
 }
 
 impl<T: Serialize> HolistayResponse<T> {
-    pub fn new(message: Value, body: Option<T>) -> Self {
+    pub const fn new(message: Value, body: Option<T>) -> Self {
         Self {
             message,
             body

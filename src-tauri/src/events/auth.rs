@@ -1,4 +1,4 @@
-use sqlx::{Acquire, Pool, Sqlite};
+use sqlx::{Pool, Sqlite};
 use uuid::Uuid;
 
 use crate::models::{user::User, LoginRegisterAttempt};
@@ -27,6 +27,7 @@ pub async fn register_user(
     tran.commit().await
 }
 
+#[allow(dead_code)]
 pub async fn login_user(
     conn_pool: Pool<Sqlite>,
     login_attempt: LoginRegisterAttempt,

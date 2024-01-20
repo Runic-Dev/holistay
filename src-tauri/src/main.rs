@@ -1,5 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+#![warn(clippy::pedantic)]
+#![warn(clippy::nursery)]
 
 use events::{HolistayEvent, listen_to_frontend, holistay_event_handler};
 use tauri::Manager;
@@ -9,13 +11,14 @@ mod models;
 pub mod responses;
 
 mod db;
+pub mod utils;
 
 #[tokio::main]
 async fn main() {
     match db::init().await {
         Ok(pool) => {
             if let Err(err) = sqlx::migrate!("./src/db/migrations/").run(&pool).await {
-                panic!("Failed to run migrations: {:?}", err);
+                panic!("Failed to run migrations: {err:?}");
             }
             let (tx, rx) = tokio::sync::mpsc::channel::<HolistayEvent>(32);
             tauri::Builder::default()
@@ -28,6 +31,6 @@ async fn main() {
                 .run(tauri::generate_context!())
                 .expect("error while running tauri application");
         }
-        Err(err) => panic!("Unable to initialize application: {}", err),
+        Err(err) => panic!("Unable to initialize application: {err}"),
     }
 }

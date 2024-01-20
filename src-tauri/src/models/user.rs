@@ -22,7 +22,7 @@ impl FromRow<'_, SqliteRow> for User {
         let id = Uuid::parse_str(&id_str)
             .map_err(|_| Error::RowNotFound)?;
 
-        Ok(User {
+        Ok(Self {
             id,
             username: row.try_get("username")?,
         })
@@ -30,7 +30,7 @@ impl FromRow<'_, SqliteRow> for User {
 }
 
 impl User {
-    pub fn new(id: Uuid, username: String) -> Self {
+    pub const fn new(id: Uuid, username: String) -> Self {
         Self {
             id, username
         }

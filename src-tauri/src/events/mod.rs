@@ -1,5 +1,6 @@
 mod auth;
 
+use serde_json::json;
 use tokio::sync::{
     mpsc::{Receiver, Sender},
     Mutex,
@@ -11,10 +12,10 @@ use tauri::{App, AppHandle, Manager};
 
 use crate::{
     models::LoginRegisterAttempt,
-    models::{user::User, LoggedInUser},
+    models::{user::User, LoggedInUser, RegisteredUser},
 };
 
-use self::auth::{login_user, register_user};
+use self::auth::register_user;
 
 pub enum HolistayEvent {
     UpdateLoggedInUser(User),
@@ -24,10 +25,11 @@ pub enum HolistayEvent {
     LoginAttempt(LoginRegisterAttempt),
 }
 
-pub fn listen_to_frontend(app: &mut App, tx: Sender<HolistayEvent>) {
+/// # Panics
+pub fn listen_to_frontend(app: &App, tx: Sender<HolistayEvent>) {
     let tx_clone = tx.clone();
     app.listen_global("register_attempt", move |event| {
-        let payload = event.payload().expect("Argh there's no bladdy payload");
+        let payload = event.payload().expect("Payload expected");
         let register_attempt: LoginRegisterAttempt =
             serde_json::from_str(payload).expect("Couldn't parse struct from payload");
         let register_event = HolistayEvent::RegisterAttempt(register_attempt);
@@ -48,6 +50,7 @@ pub fn listen_to_frontend(app: &mut App, tx: Sender<HolistayEvent>) {
     });
 }
 
+#[allow(clippy::significant_drop_tightening)]
 pub fn holistay_event_handler(
     app_handle: AppHandle,
     pool: Pool<Sqlite>,
@@ -62,29 +65,47 @@ pub fn holistay_event_handler(
                 HolistayEvent::NoLoggedInUser => todo!(),
                 HolistayEvent::RegisterAttempt(register_attempt) => {
                     let pool_lock = mutex_pool.lock().await;
-                    let _ = match register_user(pool_lock.clone(), register_attempt.clone()).await {
-                        Ok(_) => {
-                            println!("Sending out event!");
-                            Ok(app_handle.emit_all(
-                                "user_logged_in",
-                                LoggedInUser {
-                                    username: register_attempt.username,
-                                },
-                            ))
-                        }
-                        Err(err) => Err(println!("{:?}", err)),
-                    };
+                    register_user(pool_lock.clone(), register_attempt.clone())
+                        .await
+                        .map_or_else(
+                            |err| {
+                                let _ = app_handle.emit_all(
+                                    "failed_user_registration",
+                                    json!({
+                                        "error_message": err.to_string()
+                                    }),
+                                );
+                            },
+                            |()| {
+                                let _ = app_handle.emit_all(
+                                    "user_registered",
+                                    RegisteredUser {
+                                        username: register_attempt.username,
+                                    },
+                                );
+                            },
+                        );
                 }
                 HolistayEvent::LoginAttempt(login_attempt) => {
                     let pool_lock = mutex_pool.lock().await;
-                    let _ = match login_user(pool_lock.clone(), login_attempt.clone()).await {
+                    let _ = match {
+                        let conn_pool = pool_lock.clone();
+                        let login_attempt = login_attempt.clone();
+                        async move {
+                            sqlx::query_as::<Sqlite, User>("SELECT * FROM user INNER JOIN auth ON user.username = auth.username WHERE user.username = ? AND auth.password = ?")
+                                .bind(login_attempt.username)
+                                .bind(login_attempt.password)
+                                .fetch_one(&conn_pool)
+                                .await
+                        }
+                    }.await {
                         Ok(user) => Ok(app_handle.emit_all(
                             "user_logged_in",
                             LoggedInUser {
                                 username: user.username,
                             },
                         )),
-                        Err(err) => Err(println!("{:?}", err)),
+                        Err(err) => Err(println!("{err:?}")),
                     };
                 }
             }
