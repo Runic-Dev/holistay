@@ -1,7 +1,7 @@
 -- Add up migration script here
 CREATE TABLE IF NOT EXISTS user (
-  id TEXT NOT NULL,
-  username TEXT NOT NULL,
+  id TEXT UNIQUE NOT NULL,
+  username TEXT UNIQUE NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

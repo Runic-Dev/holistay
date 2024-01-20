@@ -15,33 +15,6 @@
     "/room/:roomId": Room,
     "*": Dashboard,
   };
-  onMount(async () => {
-    // TODO: Reconsider multiple listens in the frontend
-    await listen("user_registered", (event) => {
-      console.log("user_registered");
-      console.log(event);
-      userStore.set({
-        user: {
-          id: "testid",
-          name: event.payload["username"],
-        },
-      });
-    });
-    await listen("user_logged_in", (event) => {
-      console.log("user_logged_in");
-      console.log(event);
-      userStore.set({
-        user: {
-          id: "testid",
-          name: event.payload["username"],
-        },
-      });
-    });
-    await listen("failed_user_registration", (event) => {
-      console.log("failed_user_registration");
-      console.log(event);
-    });
-  });
 </script>
 
 <main class="container">

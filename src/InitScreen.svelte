@@ -1,5 +1,8 @@
 <script lang="ts">
   import { emit } from "@tauri-apps/api/event";
+  import { onMount } from "svelte";
+  import { listen } from "@tauri-apps/api/event";
+    import { userStore } from "./store";
   let isRegister = true;
 
   let username = "",
@@ -15,7 +18,11 @@
   $: canSubmit =
     password != "" && username != "" ? password == repeatPassword : false;
 
-  $: redField = (password != repeatPassword) && username != "" && password != "" && repeatPassword != "";
+  $: redField =
+    password != repeatPassword &&
+    username != "" &&
+    password != "" &&
+    repeatPassword != "";
 
   function toggleForm() {
     username = "";
@@ -31,8 +38,37 @@
       password,
     });
   }
+  onMount(async () => {
+    // TODO: Reconsider multiple listens in the frontend
+    await listen("user_registered", (event) => {
+      console.log("user_registered");
+      console.log(event);
+      userStore.set({
+        //TODO: Why have I hard-coded a fake ID here?
+        user: {
+          id: "testid",
+          name: event.payload["username"],
+        },
+      });
+    });
+    await listen("user_logged_in", (event) => {
+      console.log("user_logged_in");
+      console.log(event);
+      userStore.set({
+        //TODO: Why have I hard-coded a fake ID here?
+        user: {
+          id: "testid",
+          name: event.payload["username"],
+        },
+      });
+    });
+    await listen("failed_user_registration", (event) => {
+      console.log("failed_user_registration");
+      console.log(event);
+      // TODO: Display some kind of message
+    });
+  });
 </script>
-
 <div class="init-screen">
   <h1>Welcome to Holistay</h1>
   <div class="starter-form">
