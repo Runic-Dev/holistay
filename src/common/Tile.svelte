@@ -5,7 +5,7 @@
   let onClickFunc: () => Promise<void> | void;
   export let tileConfig: TileConfig;
   let newRoomGroupName: string = "";
-  let propertyName: string = "";
+  let newPropertyName: string = "";
 
   const dispatch = createEventDispatcher();
 
@@ -13,6 +13,12 @@
     tileConfig.type = TileType.Default;
     tileConfig.title = newRoomGroupName;
     dispatch("confirmedRoomGroup", tileConfig);
+  }
+
+  function confirmNewProperty() {
+    tileConfig.type = TileType.Default;
+    tileConfig.title = newPropertyName;
+    dispatch("confirmedProperty", newPropertyName);
   }
 
   onMount(() => {
@@ -34,6 +40,7 @@
     <h4 class="name">{tileConfig.title}</h4>
     <div class="overlay" />
   </div>
+
 {:else if tileConfig.type == TileType.NewRoomGroup}
   <div class="tile newRoomGroup">
     <label for="roomGroupName">RoomGroup name:</label>
@@ -41,11 +48,12 @@
     <button on:click={confirmNewRoomGroup}>Create</button>
     <div class="overlay" />
   </div>
+
 {:else if tileConfig.type == TileType.NewProperty}
   <div class="tile newProperty">
     <label for="propertyName">Property name:</label>
-    <input bind:value={propertyName} id="propertyName" type="text" />
-    <button on:click={confirmNewRoomGroup}>Create</button>
+    <input bind:value={newPropertyName} id="propertyName" type="text" />
+    <button on:click={confirmNewProperty}>Create</button>
     <div class="overlay" />
   </div>
 {/if}
@@ -56,7 +64,7 @@
     position: relative;
     @include tile;
 
-    &.newRoomGroup, .newProperty {
+    &.newRoomGroup, &.newProperty {
       display: flex;
       flex-direction: column;
       align-items: center;

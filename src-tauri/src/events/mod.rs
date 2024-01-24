@@ -6,13 +6,14 @@ use tokio::sync::{
     Mutex,
 };
 
-use sqlx::{Pool, Sqlite};
+use sqlx::{Pool, Sqlite, FromRow};
 
 use tauri::{App, AppHandle, Manager};
+use uuid::Uuid;
 
 use crate::{
     models::LoginRegisterAttempt,
-    models::{user::User, LoggedInUser, RegisteredUser},
+    models::{user::User, LoggedInUser, RegisteredUser, Property},
 };
 
 use self::auth::register_user;
@@ -23,6 +24,8 @@ pub enum HolistayEvent {
     NoLoggedInUser,
     RegisterAttempt(LoginRegisterAttempt),
     LoginAttempt(LoginRegisterAttempt),
+    NewProperty(String),
+    GetProperites
 }
 
 /// # Panics
@@ -38,14 +41,30 @@ pub fn listen_to_frontend(app: &App, tx: Sender<HolistayEvent>) {
             let _ = tx_clone.send(register_event).await;
         });
     });
+    let tx_clone = tx.clone();
     app.listen_global("login_attempt", move |event| {
         let payload = event.payload().expect("Argh there's no bladdy payload");
         let login_attempt: LoginRegisterAttempt =
             serde_json::from_str(payload).expect("Couldn't parse struct from payload");
         let login_event = HolistayEvent::LoginAttempt(login_attempt);
-        let tx_clone = tx.clone();
+        let tx_clone = tx_clone.clone();
         tauri::async_runtime::spawn(async move {
             let _ = tx_clone.send(login_event).await;
+        });
+    });
+    let tx_clone = tx.clone();
+    app.listen_global("add_new_property", move |event| {
+        let new_property_name = event.payload().expect("Argh there's no bladdy payload");
+        let new_property_event = HolistayEvent::NewProperty(new_property_name.to_string());
+        let tx_clone = tx_clone.clone();
+        tauri::async_runtime::spawn(async move {
+            let _ = tx_clone.send(new_property_event).await;
+        });
+    });
+    app.listen_global("get_properties", move |_event| {
+        let tx_clone = tx.clone();
+        tauri::async_runtime::spawn(async move {
+            let _ = tx_clone.send(HolistayEvent::GetProperites).await;
         });
     });
 }
@@ -108,7 +127,35 @@ pub fn holistay_event_handler(
                         Err(err) => Err(println!("{err:?}")),
                     };
                 }
+                HolistayEvent::NewProperty(property_name) => {
+                    let id = Uuid::new_v4();
+                    let pool_lock = mutex_pool.lock().await;
+                    match sqlx::query("INSERT INTO property (id, name) VALUES (?, ?)")
+                        .bind(property_name)
+                        .bind(id.to_string())
+                        .execute(&*pool_lock).await {
+                            Ok(result) => {
+                                println!("Successfully entered rows to database: {}", result.rows_affected());
+                            },
+                            Err(err) => {
+                                println!("{}", err.to_string())
+                            },
+                        }
+                },
+                HolistayEvent::GetProperites => {
+                    let pool_lock = mutex_pool.lock().await;
+                    match sqlx::query_as::<Sqlite, Property>("SELECT id, name FROM property")
+                        .fetch_all(&*pool_lock).await {
+                            Ok(results) => {
+                                let _ = app_handle.emit_all("properties_loaded", &results);
+                            },
+                            Err(err) => {
+                                println!("Problem loading properties: {}", err)
+                            },
+                        }
+                },
             }
         }
     });
 }
+

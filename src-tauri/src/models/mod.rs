@@ -39,11 +39,7 @@ pub struct LoggedInUser {
 }
 
 #[derive(Serialize, Deserialize, FromRow)]
-struct Property {
-    id: String,
-    name: String,
-    image_url: String,
-    address: Address,
-    contact: Contact,
-    room_groups: Vec<RoomGroup>,
+pub struct Property {
+    pub id: String,
+    pub name: String,
 }

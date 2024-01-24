@@ -24,6 +24,7 @@
 
   $: roomGroupArray = [];
 
+  // TODO: What the hell is this?!
   function toggleNewRoomGroup() {
     addingNewRoomGroup = !addingNewRoomGroup;
   }

@@ -2,7 +2,7 @@
   import { emit } from "@tauri-apps/api/event";
   import { onMount } from "svelte";
   import { listen } from "@tauri-apps/api/event";
-    import { userStore } from "./store";
+  import { userStore } from "./store";
   let isRegister = true;
 
   let username = "",
@@ -15,8 +15,13 @@
 
   $: submitButtonText = isRegister ? "Register" : "Login";
 
-  $: canSubmit =
-    password != "" && username != "" ? password == repeatPassword : false;
+  $: canSubmit = () => {
+    if (isRegister) {
+      username != "" && password != "" && password == repeatPassword;
+    } else {
+      username != "" && password != "";
+    }
+  };
 
   $: redField =
     password != repeatPassword &&
@@ -63,12 +68,11 @@
       });
     });
     await listen("failed_user_registration", (event) => {
-      console.log("failed_user_registration");
-      console.log(event);
-      // TODO: Display some kind of message
+      console.log(`There was a problem registering: ${event}`);
     });
   });
 </script>
+
 <div class="init-screen">
   <h1>Welcome to Holistay</h1>
   <div class="starter-form">
