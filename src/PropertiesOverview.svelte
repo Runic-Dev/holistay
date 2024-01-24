@@ -1,14 +1,13 @@
 <script lang="ts">
   import { onMount } from "svelte";
 
-  export let properties = [];
-  export let error = false;
-  import { Properties } from "./lib/test_data/properties";
   import PropertyOverview from "./PropertyOverview.svelte";
   import Tile from "./common/Tile.svelte";
   import { TileType } from "./enums/ui";
   import { emit, listen } from "@tauri-apps/api/event";
+  import type { Property } from "./types";
 
+  let properties: Property[] = [];
   let addingNewProperty = false;
 
   function addNewProperty(payload: any) {
@@ -21,6 +20,7 @@
     emit("get_properties");
     await listen("properties_loaded", (event) => {
       console.log(event);
+      properties = event.payload as Property[];
     });
   });
 </script>

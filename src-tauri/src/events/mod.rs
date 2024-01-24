@@ -131,8 +131,8 @@ pub fn holistay_event_handler(
                     let id = Uuid::new_v4();
                     let pool_lock = mutex_pool.lock().await;
                     match sqlx::query("INSERT INTO property (id, name) VALUES (?, ?)")
-                        .bind(property_name)
                         .bind(id.to_string())
+                        .bind(property_name)
                         .execute(&*pool_lock).await {
                             Ok(result) => {
                                 println!("Successfully entered rows to database: {}", result.rows_affected());
