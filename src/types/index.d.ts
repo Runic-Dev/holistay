@@ -3,7 +3,7 @@ import type { IsSaveable } from "src/lib/database"
 export type Property = {
   id: string,
   name: string,
-  // imageUrl: string,
+  image: string,
   // address: Address,
   // contact: Contact,
   // roomGroups: RoomGroup[]
@@ -42,7 +42,7 @@ export enum Bed {
 export type TileConfig = {
   type: TileType,
   title: string | null,
-  imageUrl: string | null,
+  image: string | null,
   clickAction: null | (() => void | Promise<void>)
 }
 

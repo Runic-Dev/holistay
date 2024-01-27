@@ -42,4 +42,5 @@ pub struct LoggedInUser {
 pub struct Property {
     pub id: String,
     pub name: String,
+    pub image: String
 }

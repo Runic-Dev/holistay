@@ -11,8 +11,6 @@
   let addingNewProperty = false;
 
   function addNewProperty(payload: any) {
-    console.log("Add new property");
-    console.log(payload);
     emit("add_new_property", payload.detail);
   }
 
@@ -36,7 +34,7 @@
         tileConfig={{
           type: TileType.NewProperty,
           title: "Create Property",
-          imageUrl: null,
+          image: null,
           clickAction: null,
         }}
         on:confirmedProperty={addNewProperty}

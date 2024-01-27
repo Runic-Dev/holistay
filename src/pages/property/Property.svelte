@@ -8,6 +8,7 @@
   import { onMount } from "svelte";
   import Tile from "../../common/Tile.svelte";
   import RoomGroup from "../../models/RoomGroup";
+    import { emit, listen } from "@tauri-apps/api/event";
 
   export let params: { propertyId: string };
 
@@ -37,10 +38,20 @@
     toggleNewRoomGroup();
   }
 
+  type PropertyData = {
+    imageFilePath: string
+  }
+
   onMount(() => {
+    emit("get_property_data", params.propertyId);
     let properties: Property[] = Properties.data;
     property = properties.filter((p) => p.id == params.propertyId).at(0);
     roomGroupArray = property.roomGroups;
+
+
+    listen("property_data", (event) => {
+      let payload = event.payload as PropertyData;
+    });
   });
 </script>
 

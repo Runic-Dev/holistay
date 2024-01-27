@@ -8,7 +8,7 @@
   let tileConfig: TileConfig = {
     type: TileType.Default,
     title: property.name,
-    imageUrl: property.imageUrl,
+    image: property.image,
     clickAction: () => push(propertyLink),
   };
 </script>

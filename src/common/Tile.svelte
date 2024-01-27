@@ -2,12 +2,19 @@
   import type { TileConfig } from "src/types";
   import { TileType } from "../enums/ui";
   import { onMount, createEventDispatcher } from "svelte";
+  import { dialog } from "@tauri-apps/api";
   let onClickFunc: () => Promise<void> | void;
   export let tileConfig: TileConfig;
   let newRoomGroupName: string = "";
   let newPropertyName: string = "";
+  let tileImageFilePath: string = "";
+  let loadedImage: string | null = null;
 
   const dispatch = createEventDispatcher();
+
+  function getPropertyBackgroundImg(): string {
+    return `data:image/jpeg;base64,${tileConfig.image}`;
+  }
 
   function confirmNewRoomGroup() {
     tileConfig.type = TileType.Default;
@@ -18,7 +25,10 @@
   function confirmNewProperty() {
     tileConfig.type = TileType.Default;
     tileConfig.title = newPropertyName;
-    dispatch("confirmedProperty", newPropertyName);
+    dispatch("confirmedProperty", {
+      name: newPropertyName,
+      image: tileImageFilePath,
+    });
   }
 
   onMount(() => {
@@ -27,20 +37,45 @@
       return;
     }
     onClickFunc = tileConfig.clickAction;
+    if(tileConfig.image) {
+      loadedImage = getPropertyBackgroundImg();
+    }
   });
+
+  async function selectImage(
+    _: MouseEvent & { currentTarget: EventTarget & HTMLButtonElement },
+  ) {
+    let filePath = await dialog.open();
+    if (Array.isArray(filePath)) {
+      console.error("Only select one");
+    } else {
+      console.log(filePath);
+      tileImageFilePath = filePath;
+    }
+  }
 </script>
 
 {#if tileConfig.type == TileType.Default}
+  {#if loadedImage}
   <div
     on:keydown={() => tileConfig.clickAction()}
     on:click={() => tileConfig.clickAction()}
     class="tile"
-    style="background-image: url({tileConfig.imageUrl});"
+    style="background-image: url({loadedImage});"
   >
     <h4 class="name">{tileConfig.title}</h4>
     <div class="overlay" />
   </div>
-
+  {:else}
+  <div
+    on:keydown={() => tileConfig.clickAction()}
+    on:click={() => tileConfig.clickAction()}
+    class="tile"
+  >
+    <h4 class="name">{tileConfig.title}</h4>
+    <div class="overlay" />
+  </div>
+  {/if}
 {:else if tileConfig.type == TileType.NewRoomGroup}
   <div class="tile newRoomGroup">
     <label for="roomGroupName">RoomGroup name:</label>
@@ -48,12 +83,12 @@
     <button on:click={confirmNewRoomGroup}>Create</button>
     <div class="overlay" />
   </div>
-
 {:else if tileConfig.type == TileType.NewProperty}
   <div class="tile newProperty">
     <label for="propertyName">Property name:</label>
     <input bind:value={newPropertyName} id="propertyName" type="text" />
     <button on:click={confirmNewProperty}>Create</button>
+    <button on:click={selectImage}>Select Image</button>
     <div class="overlay" />
   </div>
 {/if}
@@ -64,13 +99,15 @@
     position: relative;
     @include tile;
 
-    &.newRoomGroup, &.newProperty {
+    &.newRoomGroup,
+    &.newProperty {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
 
-      input, button {
+      input,
+      button {
         z-index: 5;
       }
     }
