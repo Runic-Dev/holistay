@@ -12,6 +12,7 @@
 
   function addNewProperty(payload: any) {
     emit("add_new_property", payload.detail);
+    emit("get_properties");
   }
 
   onMount(async () => {

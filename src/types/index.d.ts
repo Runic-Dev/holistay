@@ -6,7 +6,7 @@ export type Property = {
   image: string,
   // address: Address,
   // contact: Contact,
-  // roomGroups: RoomGroup[]
+  roomGroups: RoomGroup[]
 }
 
 export type Address = {

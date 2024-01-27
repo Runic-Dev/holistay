@@ -1,6 +1,4 @@
 <script lang="ts">
-  import { Properties } from "../../lib/test_data/properties";
-
   import type { Property, TileConfig } from "src/types";
   import { TileType } from "../../enums/ui";
   import MainLayout from "../../MainLayout.svelte";
@@ -8,7 +6,7 @@
   import { onMount } from "svelte";
   import Tile from "../../common/Tile.svelte";
   import RoomGroup from "../../models/RoomGroup";
-    import { emit, listen } from "@tauri-apps/api/event";
+  import { emit, listen } from "@tauri-apps/api/event";
 
   export let params: { propertyId: string };
 
@@ -39,15 +37,14 @@
   }
 
   type PropertyData = {
-    imageFilePath: string
-  }
+    imageFilePath: string;
+  };
 
   onMount(() => {
     emit("get_property_data", params.propertyId);
-    let properties: Property[] = Properties.data;
-    property = properties.filter((p) => p.id == params.propertyId).at(0);
-    roomGroupArray = property.roomGroups;
-
+    // let properties: Property[] = Properties.data;
+    // property = properties.filter((p) => p.id == params.propertyId).at(0);
+    // roomGroupArray = property.roomGroups;
 
     listen("property_data", (event) => {
       let payload = event.payload as PropertyData;
@@ -56,7 +53,7 @@
 </script>
 
 {#if property}
-  <MainLayout header={property.name} imageUrl={property.imageUrl}>
+  <MainLayout header={property.name} imageUrl={property.image}>
     <div class="manage-property">
       <div class="room-groups-controls">
         <h4 class="room-group-summary">{roomGroupSummary}</h4>
@@ -73,8 +70,8 @@
             tileConfig={{
               type: TileType.NewRoomGroup,
               title: null,
-              imageUrl: null,
-              clickAction: null
+              image: null,
+              clickAction: null,
             }}
             on:confirmedRoomGroup={addNewRoomGroup}
           />
