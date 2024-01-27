@@ -16,7 +16,7 @@ use uuid::Uuid;
 
 use crate::{
     models::LoginRegisterAttempt,
-    models::{user::User, LoggedInUser, RegisteredUser, Property},
+    models::{user::User, LoggedInUser, RegisteredUser, Property, PropertyPartial},
 };
 
 use self::auth::register_user;
@@ -167,7 +167,7 @@ pub fn holistay_event_handler(
                 },
                 HolistayEvent::GetProperites => {
                     let pool_lock = mutex_pool.lock().await;
-                    match sqlx::query_as::<Sqlite, Property>("SELECT id, name, image FROM property")
+                    match sqlx::query_as::<Sqlite, PropertyPartial>("SELECT id, name, image FROM property")
                         .fetch_all(&*pool_lock).await {
                             Ok(results) => {
                                 let _ = app_handle.emit_all("properties_loaded", &results);
@@ -177,8 +177,14 @@ pub fn holistay_event_handler(
                             },
                         }
                 },
-                HolistayEvent::PropertyDataRequested(_) => {
-
+                HolistayEvent::PropertyDataRequested(_property_id) => {
+                    // let pool_lock = mutex_pool.lock().await;
+                    // match sqlx::query_as::<Sqlite, Property>("SELECT p.*, rg.* FROM property p JOIN roomgroup rg ON p.id = rg.property_id WHERE p.id = ?")
+                    //     .bind(property_id)
+                    //     .fetch_one(&*pool_lock).await {
+                    //         Ok(_) => todo!(),
+                    //         Err(_) => todo!(),
+                    //     }
                 },
             }
         }

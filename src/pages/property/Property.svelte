@@ -42,9 +42,7 @@
 
   onMount(() => {
     emit("get_property_data", params.propertyId);
-    // let properties: Property[] = Properties.data;
-    // property = properties.filter((p) => p.id == params.propertyId).at(0);
-    // roomGroupArray = property.roomGroups;
+    // TODO: Get specific property data from database
 
     listen("property_data", (event) => {
       let payload = event.payload as PropertyData;
