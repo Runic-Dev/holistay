@@ -1,6 +1,7 @@
 mod auth;
+mod property_service;
 
-use base64::{encode, Engine, engine::general_purpose};
+use base64::{Engine, engine::general_purpose};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tokio::sync::{
@@ -16,10 +17,10 @@ use uuid::Uuid;
 
 use crate::{
     models::LoginRegisterAttempt,
-    models::{user::User, LoggedInUser, RegisteredUser, Property, PropertyPartial},
+    models::{user::User, LoggedInUser, RegisteredUser, PropertyPartial},
 };
 
-use self::auth::register_user;
+use self::{auth::register_user, property_service::{get_property_partials, add_new_property}};
 
 pub enum HolistayEvent {
     UpdateLoggedInUser(User),
@@ -148,15 +149,9 @@ pub fn holistay_event_handler(
                     };
                 }
                 HolistayEvent::NewProperty(new_property_request) => {
-                    let id = Uuid::new_v4();
                     let pool_lock = mutex_pool.lock().await;
-                    let image_file = fs::read(new_property_request.image).expect("Problem reading image file");
-                    let encoded = general_purpose::STANDARD.encode(image_file);
-                    match sqlx::query("INSERT INTO property (id, name, image) VALUES (?, ?, ?)")
-                        .bind(id.to_string())
-                        .bind(new_property_request.name)
-                        .bind(encoded)
-                        .execute(&*pool_lock).await {
+                    match add_new_property(pool_lock, new_property_request).await 
+                        {
                             Ok(result) => {
                                 println!("Successfully entered rows to database: {}", result.rows_affected());
                             },
@@ -167,17 +162,15 @@ pub fn holistay_event_handler(
                 },
                 HolistayEvent::GetProperites => {
                     let pool_lock = mutex_pool.lock().await;
-                    match sqlx::query_as::<Sqlite, PropertyPartial>("SELECT id, name, image FROM property")
-                        .fetch_all(&*pool_lock).await {
-                            Ok(results) => {
-                                let _ = app_handle.emit_all("properties_loaded", &results);
-                            },
-                            Err(err) => {
-                                println!("Problem loading properties: {}", err)
-                            },
-                        }
+                    match get_property_partials(pool_lock).await {
+                        Ok(property_partials) => {
+                            let _ = app_handle.emit_all("properties_loaded", &property_partials);
+                        },
+                        Err(err) => println!("Error loading properties: {:?}", err),
+                    };
                 },
                 HolistayEvent::PropertyDataRequested(_property_id) => {
+                    // TODO: Get full property details
                     // let pool_lock = mutex_pool.lock().await;
                     // match sqlx::query_as::<Sqlite, Property>("SELECT p.*, rg.* FROM property p JOIN roomgroup rg ON p.id = rg.property_id WHERE p.id = ?")
                     //     .bind(property_id)
