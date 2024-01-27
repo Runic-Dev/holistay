@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import PropertyOverview from "./PropertyOverview.svelte";
   import Tile from "./common/Tile.svelte";
   import { TileType } from "./enums/ui";
   import { emit, listen } from "@tauri-apps/api/event";

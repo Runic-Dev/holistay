@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Dashboard from "./Dashboard.svelte";
+  import WelcomeScreen from "./WelcomeScreen.svelte";
   import Property from "./pages/property/Property.svelte";
   import RoomGroup from "./pages/roomgroup/RoomGroup.svelte";
   import Router from "svelte-spa-router";
@@ -9,11 +9,11 @@
   import { userStore } from "./store";
 
   const routes = {
-    "/": Dashboard,
+    "/": WelcomeScreen,
     "/property/:propertyId": Property,
     "/roomgroup/:roomGroupId": RoomGroup,
     "/room/:roomId": Room,
-    "*": Dashboard,
+    "*": WelcomeScreen,
   };
 </script>
 
