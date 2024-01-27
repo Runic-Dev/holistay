@@ -1,8 +1,8 @@
 <script lang="ts">
     import MainLayout from "./MainLayout.svelte";
-    import PropertiesOverview from "./PropertiesOverview.svelte";
     import InitScreen from "./InitScreen.svelte";
     import { userStore } from "./store";
+    import PropertyDashboard from "./PropertyDashboard.svelte";
 
     $: loggedInUser = $userStore.user;
     $: if (loggedInUser) {
@@ -14,7 +14,7 @@
 
 <MainLayout>
     {#if loggedInUser}
-        <PropertiesOverview />
+        <PropertyDashboard />
     {:else}
         <InitScreen />
     {/if}

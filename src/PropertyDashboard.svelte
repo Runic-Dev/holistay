@@ -1,11 +1,11 @@
 <script lang="ts">
   import { onMount } from "svelte";
-
   import PropertyOverview from "./PropertyOverview.svelte";
   import Tile from "./common/Tile.svelte";
   import { TileType } from "./enums/ui";
   import { emit, listen } from "@tauri-apps/api/event";
-  import type { Property } from "./types";
+  import type { Property, TileConfig } from "./types";
+    import { push } from "svelte-spa-router";
 
   let properties: Property[] = [];
   let addingNewProperty = false;
@@ -13,6 +13,15 @@
   function addNewProperty(payload: any) {
     emit("add_new_property", payload.detail);
     emit("get_properties");
+  }
+
+  function propertyToTileConfig(property: Property) {
+    return {
+      type: TileType.Default,
+      title: property.name,
+      image: property.image,
+      clickAction: () => push(`/property/${property.id}`) 
+    } as TileConfig;
   }
 
   onMount(async () => {
@@ -28,7 +37,7 @@
   <h2>Select your property:</h2>
   <div class="property-overview-container">
     {#each properties as property}
-      <PropertyOverview {property} />
+      <Tile tileConfig={propertyToTileConfig(property)} />
     {/each}
     {#if addingNewProperty}
       <Tile
