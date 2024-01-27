@@ -1,26 +1,23 @@
-mod auth;
 mod property_service;
+mod auth_service;
 
-use base64::{Engine, engine::general_purpose};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tokio::sync::{
     mpsc::{Receiver, Sender},
     Mutex,
 };
-use std::fs;
 
 use sqlx::{Pool, Sqlite};
 
 use tauri::{App, AppHandle, Manager};
-use uuid::Uuid;
 
 use crate::{
     models::LoginRegisterAttempt,
-    models::{user::User, LoggedInUser, RegisteredUser, PropertyPartial},
+    models::{user::User, LoggedInUser, RegisteredUser},
 };
 
-use self::{auth::register_user, property_service::{get_property_partials, add_new_property}};
+use self::{auth_service::{register_user, login_user}, property_service::{get_property_partials, add_new_property}};
 
 pub enum HolistayEvent {
     UpdateLoggedInUser(User),
@@ -105,12 +102,10 @@ pub fn holistay_event_handler(
                 HolistayEvent::NoLoggedInUser => todo!(),
                 HolistayEvent::RegisterAttempt(register_attempt) => {
                     let pool_lock = mutex_pool.lock().await;
-                    register_user(pool_lock.clone(), register_attempt.clone())
+                    register_user(pool_lock, register_attempt.clone())
                         .await
                         .map_or_else(
-                            |err| {
-                                let _ = app_handle.emit_all(
-                                    "failed_user_registration",
+                            |err| { let _ = app_handle.emit_all( "failed_user_registration",
                                     json!({
                                         "error_message": err.to_string()
                                     }),
@@ -128,46 +123,27 @@ pub fn holistay_event_handler(
                 }
                 HolistayEvent::LoginAttempt(login_attempt) => {
                     let pool_lock = mutex_pool.lock().await;
-                    let _ = match {
-                        let conn_pool = pool_lock.clone();
-                        let login_attempt = login_attempt.clone();
-                        async move {
-                            sqlx::query_as::<Sqlite, User>("SELECT * FROM user INNER JOIN auth ON user.username = auth.username WHERE user.username = ? AND auth.password = ?")
-                                .bind(login_attempt.username)
-                                .bind(login_attempt.password)
-                                .fetch_one(&conn_pool)
-                                .await
-                        }
-                    }.await {
-                        Ok(user) => Ok(app_handle.emit_all(
-                            "user_logged_in",
-                            LoggedInUser {
-                                username: user.username,
-                            },
-                        )),
-                        Err(err) => Err(println!("{err:?}")),
-                    };
+                    login_user(pool_lock, login_attempt).await
+                        .map_or_else( 
+                            |err| { println!("{err:?}") }, 
+                            |user| { let _ = 
+                                app_handle.emit_all("user_logged_in", LoggedInUser { username: user.username }); }) 
                 }
                 HolistayEvent::NewProperty(new_property_request) => {
                     let pool_lock = mutex_pool.lock().await;
-                    match add_new_property(pool_lock, new_property_request).await 
-                        {
-                            Ok(result) => {
-                                println!("Successfully entered rows to database: {}", result.rows_affected());
-                            },
-                            Err(err) => {
-                                println!("{}", err.to_string())
-                            },
-                        }
+                    add_new_property(pool_lock, new_property_request)
+                        .await
+                        .map_or_else(
+                            |err| println!("{}", err.to_string()), 
+                            |result| println!("Successfully entered rows to database: {}", result.rows_affected()))
                 },
                 HolistayEvent::GetProperites => {
                     let pool_lock = mutex_pool.lock().await;
-                    match get_property_partials(pool_lock).await {
-                        Ok(property_partials) => {
-                            let _ = app_handle.emit_all("properties_loaded", &property_partials);
-                        },
-                        Err(err) => println!("Error loading properties: {:?}", err),
-                    };
+                    get_property_partials(pool_lock).await
+                        .map_or_else(
+                            |err| println!("Error loading properties: {:?}", err), 
+                            |property_partials| { let _ = app_handle
+                                .emit_all("properties_loaded", &property_partials); });
                 },
                 HolistayEvent::PropertyDataRequested(_property_id) => {
                     // TODO: Get full property details

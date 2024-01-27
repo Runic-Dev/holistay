@@ -1,10 +1,11 @@
 use sqlx::{Pool, Sqlite};
 use uuid::Uuid;
+use tokio::sync::MutexGuard;
 
 use crate::models::{user::User, LoginRegisterAttempt};
 
 pub async fn register_user(
-    conn_pool: Pool<Sqlite>,
+    conn_pool: MutexGuard<'_, Pool<Sqlite>>,
     register_attempt: LoginRegisterAttempt,
 ) -> Result<(), sqlx::Error> {
     let mut tran = conn_pool.begin().await?;
@@ -27,14 +28,10 @@ pub async fn register_user(
     tran.commit().await
 }
 
-#[allow(dead_code)]
-pub async fn login_user(
-    conn_pool: Pool<Sqlite>,
-    login_attempt: LoginRegisterAttempt,
-) -> Result<User, sqlx::Error> {
+pub async fn login_user(pool_lock: MutexGuard<'_, Pool<Sqlite>>, login_attempt: LoginRegisterAttempt) -> Result<User, sqlx::Error> {
     sqlx::query_as::<Sqlite, User>("SELECT * FROM user INNER JOIN auth ON user.username = auth.username WHERE user.username = ? AND auth.password = ?")
         .bind(login_attempt.username)
         .bind(login_attempt.password)
-        .fetch_one(&conn_pool)
-        .await
+        .fetch_one(&*pool_lock)
+    .await
 }
