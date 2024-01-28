@@ -15,11 +15,12 @@
   let property: Property;
 
   // TODO: We need loading state, loaded state and error state for this
-  $: roomGroupSummary = property
-    ? `${property.name} has ${property.roomGroups.length} room group${
-        property.roomGroups.length > 1 ? "s" : ""
-      }`
-    : "There was an issue loading the Property";
+  // $: roomGroupSummary = property
+  //   ? `${property.name} has ${property.roomGroups.length} room group${
+  //       property.roomGroups.length > 1 ? "s" : ""
+  //     }`
+  //   : "There was an issue loading the Property";
+  $: roomGroupSummary = "To be done later"
 
   $: roomGroupArray = [];
 
@@ -36,16 +37,11 @@
     toggleNewRoomGroup();
   }
 
-  type PropertyData = {
-    imageFilePath: string;
-  };
-
-  onMount(() => {
-    emit("get_property_data", params.propertyId);
-    // TODO: Get specific property data from database
-
-    listen("property_data", (event) => {
-      let payload = event.payload as PropertyData;
+  onMount(async () => {
+    await emit("get_property_data", params.propertyId);
+    await listen("property_data", (event) => {
+      console.log(event);
+      property = event.payload as Property;
     });
   });
 </script>

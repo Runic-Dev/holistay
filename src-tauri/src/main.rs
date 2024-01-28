@@ -15,6 +15,7 @@ pub mod utils;
 
 #[tokio::main]
 async fn main() {
+    env_logger::init();
     match db::init().await {
         Ok(pool) => {
             if let Err(err) = sqlx::migrate!("./src/db/migrations/").run(&pool).await {

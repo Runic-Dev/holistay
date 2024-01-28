@@ -4,9 +4,6 @@
   import RoomGroup from "./pages/roomgroup/RoomGroup.svelte";
   import Router from "svelte-spa-router";
   import Room from "./pages/room/Room.svelte";
-  import { onMount } from "svelte";
-  import { listen } from "@tauri-apps/api/event";
-  import { userStore } from "./store";
 
   const routes = {
     "/": WelcomeScreen,

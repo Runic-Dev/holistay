@@ -46,8 +46,8 @@ pub struct LoggedInUser {
 pub struct Property {
     pub id: String,
     pub name: String,
-    pub image: String,
-    pub roomgroups: Vec<RoomGroup>
+    pub image: Option<String>,
+    pub room_groups: Vec<RoomGroup>
 }
 
 #[derive(Serialize, Deserialize, FromRow)]

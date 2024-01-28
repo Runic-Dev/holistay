@@ -1,6 +1,7 @@
 mod property_service;
 mod auth_service;
 
+use log::debug;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tokio::sync::{
@@ -17,7 +18,7 @@ use crate::{
     models::{user::User, LoggedInUser, RegisteredUser},
 };
 
-use self::{auth_service::{register_user, login_user}, property_service::{get_property_partials, add_new_property}};
+use self::{auth_service::{register_user, login_user}, property_service::{get_property_partials, add_new_property, get_property}};
 
 pub enum HolistayEvent {
     UpdateLoggedInUser(User),
@@ -77,9 +78,11 @@ pub fn listen_to_frontend(app: &App, tx: Sender<HolistayEvent>) {
             let _ = tx_clone.send(HolistayEvent::GetProperites).await;
         });
     });
-    app.listen_global("property_data", move |event| {
+    app.listen_global("get_property_data", move |event| {
+        dbg!("Event passed with property id: {}", &event);
         let tx_clone = tx.clone();
-        let property_id = event.payload().expect("No payload found with property_data event");
+        //TODO: Payloads from Svelte should have their own objects. No primitive obsessions here!
+        let property_id: String = serde_json::from_str(event.payload().expect("No payload found with property_data event")).expect("Couldn't parse property ID");
         let property_data_req = HolistayEvent::PropertyDataRequested(property_id.to_string());
         tauri::async_runtime::spawn(async move {
             let _ = tx_clone.send(property_data_req).await;
@@ -145,15 +148,14 @@ pub fn holistay_event_handler(
                             |property_partials| { let _ = app_handle
                                 .emit_all("properties_loaded", &property_partials); });
                 },
-                HolistayEvent::PropertyDataRequested(_property_id) => {
-                    // TODO: Get full property details
-                    // let pool_lock = mutex_pool.lock().await;
-                    // match sqlx::query_as::<Sqlite, Property>("SELECT p.*, rg.* FROM property p JOIN roomgroup rg ON p.id = rg.property_id WHERE p.id = ?")
-                    //     .bind(property_id)
-                    //     .fetch_one(&*pool_lock).await {
-                    //         Ok(_) => todo!(),
-                    //         Err(_) => todo!(),
-                    //     }
+                HolistayEvent::PropertyDataRequested(property_id) => {
+                    let pool_lock = mutex_pool.lock().await;
+                    get_property(pool_lock, property_id).await
+                        .map_or_else(
+                            |err| println!("Error loading property: {err:?}"), 
+                            |property| {
+                                let _ = app_handle.emit_all("property_data", &property);
+                        });
                 },
             }
         }

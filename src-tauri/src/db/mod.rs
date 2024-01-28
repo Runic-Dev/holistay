@@ -1,4 +1,7 @@
-use sqlx::{migrate::MigrateDatabase, Sqlite, SqlitePool};
+use log::LevelFilter;
+use sqlx::{migrate::MigrateDatabase, Sqlite, SqlitePool, sqlite::SqliteConnectOptions, ConnectOptions};
+use url::Url;
+
 
 pub async fn init() -> Result<SqlitePool, sqlx::Error> {
     const DB_URL: &str = "sqlite:sqlite.db";
@@ -8,6 +11,7 @@ pub async fn init() -> Result<SqlitePool, sqlx::Error> {
         println!("Successfully created database");
     }
 
-    let pool = SqlitePool::connect(DB_URL).await?;
+    let db_url = Url::parse(DB_URL).unwrap();
+    let pool = SqlitePool::connect_with(SqliteConnectOptions::from_url(&db_url)?.log_statements(LevelFilter::Trace)).await?;
     Ok(pool)
 }
