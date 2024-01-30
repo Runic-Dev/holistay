@@ -7,6 +7,7 @@
   import Tile from "../../common/Tile.svelte";
   import RoomGroup from "../../models/RoomGroup";
   import { emit, listen } from "@tauri-apps/api/event";
+  import { addBase64HtmlSyntax } from "../../utils/index";
 
   export let params: { propertyId: string };
 
@@ -47,7 +48,7 @@
 </script>
 
 {#if property}
-  <MainLayout header={property.name} imageUrl={property.image}>
+  <MainLayout header={property.name} imageUrl={addBase64HtmlSyntax(property.image, "jpeg")}>
     <div class="manage-property">
       <div class="room-groups-controls">
         <h4 class="room-group-summary">{roomGroupSummary}</h4>
