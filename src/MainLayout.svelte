@@ -1,6 +1,7 @@
 <script lang="ts">
   import { push } from "svelte-spa-router";
   import { userStore } from "./store";
+    import { onMount } from "svelte";
   export let header: string|null = null;
   export let imageUrl: string|null = null;
   $: username = null;
@@ -9,6 +10,13 @@
       console.log($userStore);
       console.log(username);
   }
+
+  onMount(() => {
+    if(imageUrl) {
+      let withBase64Syntax = `data:image/jpeg;base64,${imageUrl}`;
+      imageUrl = withBase64Syntax;
+    }
+  });
 </script>
 
 <div class="main-dashboard">
