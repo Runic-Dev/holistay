@@ -23,7 +23,7 @@ pub struct Contact {
 pub struct RoomGroup {
     pub id: String,
     pub name: String,
-    pub image: String
+    pub image: Option<String>
 }
 
 #[derive(Deserialize, Clone)]

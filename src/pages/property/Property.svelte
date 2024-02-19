@@ -15,26 +15,33 @@
 
   let property: Property;
 
-  // TODO: We need loading state, loaded state and error state for this
-  // $: roomGroupSummary = property
-  //   ? `${property.name} has ${property.roomGroups.length} room group${
-  //       property.roomGroups.length > 1 ? "s" : ""
-  //     }`
-  //   : "There was an issue loading the Property";
   $: roomGroupSummary = "To be done later"
 
   $: roomGroupArray = [];
 
-  // TODO: What the hell is this?!
   function toggleNewRoomGroup() {
     addingNewRoomGroup = !addingNewRoomGroup;
   }
 
   function addNewRoomGroup(event: CustomEvent<TileConfig>) {
-    let newRoomGroup = new RoomGroup(event.detail.title);
-    let newRoomGroupArray = roomGroupArray;
-    newRoomGroupArray.push(newRoomGroup);
-    roomGroupArray = newRoomGroupArray;
+
+    console.log(event.detail);
+    console.log(property.id);
+
+    let newRoomGroupRequest = {
+      name: event.detail.title,
+      property_id: property.id,
+      image: event.detail.image
+    };
+
+    console.log(`Prepared newRoomGroupRequest: `);
+    console.table(newRoomGroupRequest);
+
+    emit("add_new_room_group", newRoomGroupRequest);
+    emit("get_room_groups", {
+      property_id: property.id
+    })
+
     toggleNewRoomGroup();
   }
 
@@ -44,6 +51,9 @@
       console.log(event);
       property = event.payload as Property;
     });
+    await listen("room_groups_data", (event) => {
+      console.log(event);
+    })
   });
 </script>
 

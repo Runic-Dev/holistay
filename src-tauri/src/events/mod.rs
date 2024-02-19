@@ -1,8 +1,8 @@
 mod property_service;
 mod auth_service;
+mod requests;
+mod room_group_service;
 
-use log::debug;
-use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tokio::sync::{
     mpsc::{Receiver, Sender},
@@ -18,7 +18,7 @@ use crate::{
     models::{user::User, LoggedInUser, RegisteredUser},
 };
 
-use self::{auth_service::{register_user, login_user}, property_service::{get_property_partials, add_new_property, get_property}};
+use self::{auth_service::{register_user, login_user}, property_service::{get_property_partials, add_new_property, get_property}, requests::{NewPropertyRequest, NewRoomGroupRequest, GetRoomGroupsRequest}, room_group_service::{add_new_room_group, get_room_groups}};
 
 pub enum HolistayEvent {
     UpdateLoggedInUser(User),
@@ -27,15 +27,12 @@ pub enum HolistayEvent {
     RegisterAttempt(LoginRegisterAttempt),
     LoginAttempt(LoginRegisterAttempt),
     NewProperty(NewPropertyRequest),
-    GetProperites,
-    PropertyDataRequested(String)
+    NewRoomGroup(NewRoomGroupRequest),
+    GetProperties,
+    PropertyDataRequested(String),
+    GetRoomGroups(GetRoomGroupsRequest),
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct NewPropertyRequest {
-    pub name: String,
-    pub image: String
-}
 
 /// # Panics
 pub fn listen_to_frontend(app: &App, tx: Sender<HolistayEvent>) {
@@ -63,7 +60,7 @@ pub fn listen_to_frontend(app: &App, tx: Sender<HolistayEvent>) {
     });
     let tx_clone = tx.clone();
     app.listen_global("add_new_property", move |event| {
-        let payload = event.payload().expect("Argh there's no bladdy payload");
+        let payload = event.payload().expect("No payload found for new property request");
         let new_property_request: NewPropertyRequest = serde_json::from_str(payload).expect("Couldn't parse NewPropertyRequest from payload");
         let new_property_event = HolistayEvent::NewProperty(new_property_request);
         let tx_clone = tx_clone.clone();
@@ -72,10 +69,29 @@ pub fn listen_to_frontend(app: &App, tx: Sender<HolistayEvent>) {
         });
     });
     let tx_clone = tx.clone();
+    app.listen_global("add_new_room_group", move |event| {
+        let payload = event.payload().expect("No payload found for new room group request");
+        let new_room_group_request: NewRoomGroupRequest = serde_json::from_str(payload).expect("Couldn't parse NewRoomGroupRequest from payload");
+        let new_room_group_event = HolistayEvent::NewRoomGroup(new_room_group_request);
+        let tx_clone = tx_clone.clone();
+        tauri::async_runtime::spawn(async move {
+            let _ = tx_clone.send(new_room_group_event).await;
+        });
+    });
+    let tx_clone = tx.clone();
     app.listen_global("get_properties", move |_event| {
         let tx_clone = tx_clone.clone();
         tauri::async_runtime::spawn(async move {
-            let _ = tx_clone.send(HolistayEvent::GetProperites).await;
+            let _ = tx_clone.send(HolistayEvent::GetProperties).await;
+        });
+    });
+    let tx_clone = tx.clone();
+    app.listen_global("get_room_groups", move |event| {
+        let payload = event.payload().expect("No payload found for get room groups request");
+        let tx_clone = tx_clone.clone();
+        let get_room_groups_request: GetRoomGroupsRequest = serde_json::from_str(payload).expect("Couldn't parse NewPropertyRequest from payload");
+        tauri::async_runtime::spawn(async move {
+            let _ = tx_clone.send(HolistayEvent::GetRoomGroups(get_room_groups_request)).await;
         });
     });
     app.listen_global("get_property_data", move |event| {
@@ -140,7 +156,7 @@ pub fn holistay_event_handler(
                             |err| println!("{}", err.to_string()), 
                             |result| println!("Successfully entered rows to database: {}", result.rows_affected()))
                 },
-                HolistayEvent::GetProperites => {
+                HolistayEvent::GetProperties => {
                     let pool_lock = mutex_pool.lock().await;
                     get_property_partials(pool_lock).await
                         .map_or_else(
@@ -155,6 +171,22 @@ pub fn holistay_event_handler(
                             |err| println!("Error loading property: {err:?}"), 
                             |property| {
                                 let _ = app_handle.emit_all("property_data", &property);
+                        });
+                },
+                HolistayEvent::NewRoomGroup(new_room_group_request) => {
+                    let pool_lock = mutex_pool.lock().await;
+                    add_new_room_group(pool_lock, new_room_group_request)
+                        .await
+                        .map_or_else(
+                            |err| println!("{}", err.to_string()), 
+                            |result| println!("Successfully entered rows to database: {}", result.rows_affected()))
+                },
+                HolistayEvent::GetRoomGroups(get_room_groups_request) => {
+                    let pool_lock = mutex_pool.lock().await;
+                    get_room_groups(pool_lock, get_room_groups_request)
+                        .await
+                        .map_or_else(|err| println!("Error loading room groups: {err:?}"), |room_groups| {
+                            let _ = app_handle.emit_all("room_groups_data", &room_groups);
                         });
                 },
             }

@@ -1,7 +1,6 @@
 use std::fs;
 
 use base64::{engine::general_purpose, Engine};
-use log::info;
 use tokio::sync::MutexGuard;
 use sqlx::{Sqlite, Pool, prelude::FromRow};
 use uuid::Uuid;
@@ -28,8 +27,6 @@ pub async fn add_new_property(pool_lock: MutexGuard<'_, Pool<Sqlite>>, new_prope
 
 pub async fn get_property(pool_lock: MutexGuard<'_, Pool<Sqlite>>, property_id: String) -> Result<Property, sqlx::Error> {
 
-    info!("This is the property id: {property_id}");
-
     match sqlx::query_as!(
         PropertyRoomGroupRow,
         "SELECT p.id as property_id, p.name as property_name, p.image as property_image, rg.id as room_group_id, rg.name as room_group_name, rg.image as room_group_image FROM property p LEFT OUTER JOIN room_group rg ON p.id = rg.property_id WHERE p.id = ?",
@@ -45,7 +42,7 @@ pub async fn get_property(pool_lock: MutexGuard<'_, Pool<Sqlite>>, property_id: 
                 let room_groups = property_room_group_rows.into_iter().filter_map(|x| Some(RoomGroup {
                     id : x.room_group_id?,
                     name: x.room_group_name?,
-                    image: x.room_group_image?,
+                    image: x.room_group_image,
                 })).collect::<Vec<RoomGroup>>();            
                 Ok(Property {
                     id: property_data.property_id,
@@ -59,30 +56,6 @@ pub async fn get_property(pool_lock: MutexGuard<'_, Pool<Sqlite>>, property_id: 
                 Err(err)
             },
         }
-
-    // match sqlx::query_as::<Sqlite, PropertyRoomGroupRow>(
-    //     "SELECT p.id as property_id, p.name as property_name, p.image as property_image, rg.id as room_group_id, rg.name as room_group_name, rg.image as room_group_image FROM property p LEFT OUTER JOIN room_group rg ON p.id = rg.property_id WHERE p.id = ?")
-    //     .bind(property_id)
-    //     .fetch_all(&*pool_lock).await {
-    //         Ok(property_room_group_rows) => {
-    //             let property_data = property_room_group_rows.first().unwrap().clone();
-    //             let room_groups = property_room_group_rows.into_iter().filter_map(|x| Some(RoomGroup {
-    //                 id : x.room_group_id?,
-    //                 name: x.room_group_name?,
-    //                 image: x.room_group_image?,
-    //             })).collect::<Vec<RoomGroup>>();            
-    //             Ok(Property {
-    //                 id: property_data.property_id,
-    //                 name: property_data.property_name,
-    //                 image: property_data.property_image,
-    //                 room_groups
-    //             })
-    //         },
-    //         Err(err) => {
-    //             println!("Error getting property from database: {err:?}");
-    //             Err(err)
-    //         },
-    //     }
 }
 
 #[derive(Clone, FromRow)]
