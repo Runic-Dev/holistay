@@ -19,7 +19,10 @@
   function confirmNewRoomGroup() {
     tileConfig.type = TileType.Default;
     tileConfig.title = newRoomGroupName;
-    dispatch("confirmedRoomGroup", tileConfig);
+    dispatch("confirmedRoomGroup", {
+      title: newRoomGroupName,
+      image: tileImageFilePath
+    });
   }
 
   function confirmNewProperty() {
@@ -81,6 +84,7 @@
     <label for="roomGroupName">RoomGroup name:</label>
     <input bind:value={newRoomGroupName} id="roomGroupName" type="text" />
     <button on:click={confirmNewRoomGroup}>Create</button>
+    <button on:click={selectImage}>Select Image</button>
     <div class="overlay" />
   </div>
 {:else if tileConfig.type == TileType.NewProperty}

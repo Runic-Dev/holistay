@@ -1,13 +1,15 @@
 <script lang="ts">
-  import type { Property, TileConfig } from "src/types";
+  import type { TileConfig } from "src/types";
   import { TileType } from "../../enums/ui";
   import MainLayout from "../../MainLayout.svelte";
   import RoomGroupComponent from "./RoomGroup.svelte";
   import { onMount } from "svelte";
   import Tile from "../../common/Tile.svelte";
-  import RoomGroup from "../../models/RoomGroup";
+  import type RoomGroup from "../../models/RoomGroup";
   import { emit, listen } from "@tauri-apps/api/event";
   import { addBase64HtmlSyntax } from "../../utils/index";
+  import type { Property } from "../../models/Property";
+  import type { PropertyDataEvent } from "../../events";
 
   export let params: { propertyId: string };
 
@@ -15,7 +17,7 @@
 
   let property: Property;
 
-  $: roomGroupSummary = "To be done later"
+  $: roomGroupSummary = "To be done later";
 
   $: roomGroupArray = [];
 
@@ -24,41 +26,48 @@
   }
 
   function addNewRoomGroup(event: CustomEvent<TileConfig>) {
-
-    console.log(event.detail);
-    console.log(property.id);
+    console.log(event);
 
     let newRoomGroupRequest = {
       name: event.detail.title,
       property_id: property.id,
-      image: event.detail.image
+      image: event.detail.image,
     };
 
-    console.log(`Prepared newRoomGroupRequest: `);
-    console.table(newRoomGroupRequest);
+    console.log(newRoomGroupRequest);
 
     emit("add_new_room_group", newRoomGroupRequest);
     emit("get_room_groups", {
-      property_id: property.id
-    })
+      property_id: property.id,
+    });
 
     toggleNewRoomGroup();
   }
 
   onMount(async () => {
+    console.log(property);
     await emit("get_property_data", params.propertyId);
-    await listen("property_data", (event) => {
-      console.log(event);
-      property = event.payload as Property;
+    await emit("get_room_groups", {
+      property_id: params.propertyId,
+    });
+    await listen<PropertyDataEvent>("property_data", (event) => {
+      if (event.payload.success) {
+        property = { ...event.payload.property };
+        roomGroupArray = event.payload.property.roomGroups;
+        console.log(roomGroupArray);
+      }
     });
     await listen("room_groups_data", (event) => {
-      console.log(event);
-    })
+      roomGroupArray = event.payload as RoomGroup[];
+    });
   });
 </script>
 
 {#if property}
-  <MainLayout header={property.name} imageUrl={addBase64HtmlSyntax(property.image, "jpeg")}>
+  <MainLayout
+    header={property.name}
+    imageUrl={addBase64HtmlSyntax(property.image, "jpeg")}
+  >
     <div class="manage-property">
       <div class="room-groups-controls">
         <h4 class="room-group-summary">{roomGroupSummary}</h4>
@@ -67,9 +76,11 @@
         </button>
       </div>
       <div class="room-groups content-container">
-        {#each roomGroupArray as roomGroup}
-          <RoomGroupComponent {roomGroup} />
-        {/each}
+        {#if roomGroupArray}
+          {#each roomGroupArray as roomGroup}
+            <RoomGroupComponent {roomGroup} />
+          {/each}
+        {/if}
         {#if addingNewRoomGroup}
           <Tile
             tileConfig={{

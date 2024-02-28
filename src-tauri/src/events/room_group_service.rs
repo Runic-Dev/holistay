@@ -17,6 +17,7 @@ pub async fn add_new_room_group(pool_lock: MutexGuard<'_, Pool<Sqlite>>, new_roo
     } else {
         None
     };
+
     sqlx::query("INSERT INTO room_group (id, property_id, name, image) VALUES (?, ?, ?, ?)")
         .bind(id.to_string())
         .bind(new_room_group_request.property_id)

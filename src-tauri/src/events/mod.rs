@@ -170,7 +170,10 @@ pub fn holistay_event_handler(
                         .map_or_else(
                             |err| println!("Error loading property: {err:?}"), 
                             |property| {
-                                let _ = app_handle.emit_all("property_data", &property);
+                                let _ = app_handle.emit_all("property_data", json!({
+                                    "success": true,
+                                    "property": &property
+                                }));
                         });
                 },
                 HolistayEvent::NewRoomGroup(new_room_group_request) => {

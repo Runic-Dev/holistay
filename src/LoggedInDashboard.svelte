@@ -26,7 +26,6 @@
   onMount(async () => {
     emit("get_properties");
     await listen("properties_loaded", (event) => {
-      console.log(event);
       properties = event.payload as Property[];
     });
   });

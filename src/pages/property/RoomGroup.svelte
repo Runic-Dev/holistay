@@ -8,15 +8,16 @@
 
   export let roomGroupLink: string = "";
   export let roomGroup: RoomGroup;
-
   let tileConfig: TileConfig = {
     type: TileType.Default,
     title: roomGroup.name,
-    imageUrl: roomGroup.imageUrl,
+    image: roomGroup.imageUrl,
     clickAction: () => push(roomGroupLink)
-  }
+  };
 
   onMount(() => {
+    console.table(tileConfig);
+    console.table(roomGroup);
     roomGroupLink = `/roomgroup/${roomGroup.id}`;
   });
 </script>

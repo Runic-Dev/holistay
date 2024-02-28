@@ -1,14 +1,5 @@
 import type { IsSaveable } from "src/lib/database"
 
-export type Property = {
-  id: string,
-  name: string,
-  image: string,
-  // address: Address,
-  // contact: Contact,
-  roomGroups: RoomGroup[]
-}
-
 export type Address = {
   street: string,
   city: string,
