@@ -37,3 +37,9 @@ export type TileConfig = {
   clickAction: null | (() => void | Promise<void>)
 }
 
+export type RoomGroupResponse = {
+  id: string,
+  name: string,
+  image: string
+};
+

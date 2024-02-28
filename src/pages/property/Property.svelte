@@ -1,11 +1,11 @@
 <script lang="ts">
-  import type { TileConfig } from "src/types";
+  import type { TileConfig, RoomGroupResponse as RoomGroupsDataEvent } from "src/types";
   import { TileType } from "../../enums/ui";
   import MainLayout from "../../MainLayout.svelte";
   import RoomGroupComponent from "./RoomGroup.svelte";
   import { onMount } from "svelte";
   import Tile from "../../common/Tile.svelte";
-  import type RoomGroup from "../../models/RoomGroup";
+  import RoomGroup from "../../models/RoomGroup";
   import { emit, listen } from "@tauri-apps/api/event";
   import { addBase64HtmlSyntax } from "../../utils/index";
   import type { Property } from "../../models/Property";
@@ -34,8 +34,6 @@
       image: event.detail.image,
     };
 
-    console.log(newRoomGroupRequest);
-
     emit("add_new_room_group", newRoomGroupRequest);
     emit("get_room_groups", {
       property_id: property.id,
@@ -45,7 +43,6 @@
   }
 
   onMount(async () => {
-    console.log(property);
     await emit("get_property_data", params.propertyId);
     await emit("get_room_groups", {
       property_id: params.propertyId,
@@ -54,19 +51,20 @@
       if (event.payload.success) {
         property = { ...event.payload.property };
         roomGroupArray = event.payload.property.roomGroups;
-        console.log(roomGroupArray);
       }
     });
-    await listen("room_groups_data", (event) => {
-      roomGroupArray = event.payload as RoomGroup[];
+    await listen<RoomGroupsDataEvent[]>("room_groups_data", (event) => {
+      roomGroupArray = event.payload.map(x => RoomGroup.FromRoomGroupResponse(x));
     });
   });
+
+  
 </script>
 
 {#if property}
   <MainLayout
     header={property.name}
-    imageUrl={addBase64HtmlSyntax(property.image, "jpeg")}
+    image={addBase64HtmlSyntax(property.image, "jpeg")}
   >
     <div class="manage-property">
       <div class="room-groups-controls">

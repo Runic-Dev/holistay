@@ -3,8 +3,9 @@
   import Tile from "./common/Tile.svelte";
   import { TileType } from "./enums/ui";
   import { emit, listen } from "@tauri-apps/api/event";
-  import type { Property, TileConfig } from "./types";
-    import { push } from "svelte-spa-router";
+  import type { TileConfig } from "./types";
+  import { push } from "svelte-spa-router";
+  import type { Property } from "./models/Property";
 
   let properties: Property[] = [];
   let addingNewProperty = false;
@@ -19,7 +20,7 @@
       type: TileType.Default,
       title: property.name,
       image: property.image,
-      clickAction: () => push(`/property/${property.id}`) 
+      clickAction: () => push(`/property/${property.id}`),
     } as TileConfig;
   }
 

@@ -16,9 +16,9 @@
   };
 
   onMount(() => {
-    console.table(tileConfig);
-    console.table(roomGroup);
-    roomGroupLink = `/roomgroup/${roomGroup.id}`;
+    console.log(roomGroup.name);
+    console.log(roomGroup.imageUrl);
+    tileConfig.clickAction = () => push(`/roomgroup/${roomGroup.id}`)
   });
 </script>
 

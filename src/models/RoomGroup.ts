@@ -1,5 +1,5 @@
 import type { IsSaveable } from "src/lib/database";
-import type { Room } from "src/types";
+import type { Room, RoomGroupResponse } from "src/types";
 import { v4 as uuid } from "uuid";
 
 export default class RoomGroup implements IsSaveable {
@@ -12,5 +12,12 @@ export default class RoomGroup implements IsSaveable {
   constructor(name: string) {
     this.id = uuid();
     this.name = name;
+  }
+
+  static FromRoomGroupResponse(response: RoomGroupResponse) {
+    let roomGroup = new RoomGroup(response.name);
+    roomGroup.id = response.id;
+    roomGroup.imageUrl = response.image;
+    return roomGroup;
   }
 }

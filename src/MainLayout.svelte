@@ -1,7 +1,6 @@
 <script lang="ts">
   import { push } from "svelte-spa-router";
   import { userStore } from "./store";
-  import { onMount } from "svelte";
   export let header: string | null = null;
   export let imageUrl: string | null = null;
   $: username = $userStore.user ? $userStore.user["name"] : null;

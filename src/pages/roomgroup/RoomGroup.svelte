@@ -1,33 +1,26 @@
 <script lang="ts">
     import { beforeUpdate } from "svelte";
-    import { Properties } from "../../lib/test_data/properties";
     import MainLayout from "../../MainLayout.svelte";
-    import type { Property } from "src/types";
     import { TileType } from "../../../src/enums/ui";
     import Description from "./Description.svelte";
     import Tile from "../../../src/common/Tile.svelte";
     import { push } from "svelte-spa-router";
-    import RoomGroup from "../../../src/models/RoomGroup";
+    import type RoomGroup from "../../../src/models/RoomGroup";
     export let roomGroup: RoomGroup;
     export let imageUrl: string = "";
     export let params: {
       roomGroupId: string
     };
     beforeUpdate(() => {
-      console.log(params.roomGroupId);
-      roomGroup = Properties.data.map((property: Property) => {
-        return property.roomGroups
-      }).flat().filter((rg) => rg.id == params.roomGroupId).at(0) ?? new RoomGroup("Default")
-      imageUrl = roomGroup.imageUrl;
-      console.log(imageUrl);
     })
+    console.log(params.roomGroupId);
 </script>
 
 <MainLayout header={roomGroup.name} {imageUrl}>
   <div class="room-group-container content-container">
     <div class="image-section">
       <h4>Image</h4>
-      {#if roomGroup.imageUrl == "" || roomGroup.imageUrl == null}
+      {#if roomGroup.imageUrl == "" || !roomGroup.imageUrl }
         <button>Upload Image</button>
       {:else}
         <button>Change Image</button>
@@ -41,7 +34,7 @@
           <Tile tileConfig={{
             type: TileType.Default,
             title: room.name,
-            imageUrl: room.imageUrl,
+            image: room.imageUrl,
             clickAction: () => push(`/room/${room.id}`)
           }}/>
         {/each}
