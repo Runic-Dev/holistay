@@ -3,7 +3,7 @@
 #![warn(clippy::pedantic)]
 #![warn(clippy::nursery)]
 
-use events::{HolistayEvent, listen_to_frontend, holistay_event_handler};
+use events::{HolistayEvent, listen_to_frontend, init_event_handler};
 use tauri::Manager;
 
 pub mod events;
@@ -26,7 +26,7 @@ async fn main() {
                 .setup(move |app| {
                     listen_to_frontend(app, tx);
                     let app_handle = app.app_handle();
-                    holistay_event_handler(app_handle, pool, rx);
+                    init_event_handler(app_handle, pool, rx);
                     Ok(())
                 })
                 .run(tauri::generate_context!())
