@@ -26,12 +26,6 @@ pub struct RoomGroup {
     pub image: Option<String>
 }
 
-#[derive(Deserialize, Clone)]
-pub struct LoginRegisterAttempt {
-    pub username: String,
-    pub password: String,
-}
-
 #[derive(Serialize, Clone)]
 pub struct RegisteredUser {
     pub username: String,

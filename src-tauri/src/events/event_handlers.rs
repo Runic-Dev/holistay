@@ -1,9 +1,7 @@
 use tauri::{App, Manager};
 use tokio::sync::mpsc::Sender;
 
-use crate::models::LoginRegisterAttempt;
-
-use super::{HolistayEvent, requests::{GetRoomGroupsRequest, NewRoomGroupRequest, NewPropertyRequest}};
+use super::{HolistayEvent, requests::{GetRoomGroupsRequest, NewRoomGroupRequest, NewPropertyRequest, LoginRegisterRequest}};
 
 pub fn handle_get_property_data(app: &App, tx: Sender<HolistayEvent>) {
     app.listen_global("get_property_data", move |event| {
@@ -63,7 +61,7 @@ pub fn handle_add_new_property(app: &App, tx_clone: Sender<HolistayEvent>) {
 pub fn handle_login_attempt(app: &App, tx_clone: Sender<HolistayEvent>) {
     app.listen_global("login_attempt", move |event| {
         let payload = event.payload().expect("Argh there's no bladdy payload");
-        let login_attempt: LoginRegisterAttempt =
+        let login_attempt: LoginRegisterRequest =
             serde_json::from_str(payload).expect("Couldn't parse struct from payload");
         let login_event = HolistayEvent::LoginAttempt(login_attempt);
         let tx_clone = tx_clone.clone();
@@ -76,7 +74,7 @@ pub fn handle_login_attempt(app: &App, tx_clone: Sender<HolistayEvent>) {
 pub fn handle_register_attempt(app: &App, tx_clone: Sender<HolistayEvent>) {
     app.listen_global("register_attempt", move |event| {
         let payload = event.payload().expect("Payload expected");
-        let register_attempt: LoginRegisterAttempt =
+        let register_attempt: LoginRegisterRequest =
             serde_json::from_str(payload).expect("Couldn't parse struct from payload");
         let register_event = HolistayEvent::RegisterAttempt(register_attempt);
         let tx_clone = tx_clone.clone();

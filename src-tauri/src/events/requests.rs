@@ -19,4 +19,9 @@ pub struct GetRoomGroupsRequest {
     pub property_id: String,
 }
 
+#[derive(Deserialize, Clone)]
+pub struct LoginRegisterRequest {
+    pub username: String,
+    pub password: String,
+}
 

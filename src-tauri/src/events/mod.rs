@@ -5,44 +5,31 @@ mod room_group_service;
 mod event_handlers;
 mod configuration;
 
-use crate::events::event_handlers::handle_register_attempt;
-use tokio::sync::{
-    mpsc::{Receiver, Sender},
-    Mutex,
-};
+use tokio::sync::{ mpsc::{Receiver, Sender}, Mutex };
 
 use sqlx::{Pool, Sqlite};
 
 use tauri::{App, AppHandle};
 
-use crate::{
-    models::LoginRegisterAttempt,
-    models::user::User,
-};
+use crate::models::user::User;
 
 use self::{
     requests::{
+        LoginRegisterRequest,
         NewPropertyRequest, 
         NewRoomGroupRequest, 
         GetRoomGroupsRequest
-    }, 
-    event_handlers::{
-        handle_login_attempt, 
-        handle_add_new_property, 
-        handle_add_new_room_group, 
-        handle_add_property, 
-        handle_get_room_groups, 
-        handle_get_property_data
     }, 
     configuration::configure_event_handler
 };
 
 pub enum HolistayEvent {
     UpdateLoggedInUser(User),
+    // TODO: YAGNI
     Error(String),
     NoLoggedInUser,
-    RegisterAttempt(LoginRegisterAttempt),
-    LoginAttempt(LoginRegisterAttempt),
+    RegisterAttempt(LoginRegisterRequest),
+    LoginAttempt(LoginRegisterRequest),
     NewProperty(NewPropertyRequest),
     NewRoomGroup(NewRoomGroupRequest),
     GetProperties,
@@ -53,13 +40,13 @@ pub enum HolistayEvent {
 
 /// # Panics
 pub fn listen_to_frontend(app: &App, tx: Sender<HolistayEvent>) {
-    handle_register_attempt(app, tx.clone());
-    handle_login_attempt(app, tx.clone());
-    handle_add_new_property(app, tx.clone());
-    handle_add_new_room_group(app, tx.clone());
-    handle_add_property(app, tx.clone());
-    handle_get_room_groups(app, tx.clone());
-    handle_get_property_data(app, tx);
+    event_handlers::handle_register_attempt(app, tx.clone());
+    event_handlers::handle_login_attempt(app, tx.clone());
+    event_handlers::handle_add_new_property(app, tx.clone());
+    event_handlers::handle_add_new_room_group(app, tx.clone());
+    event_handlers::handle_add_property(app, tx.clone());
+    event_handlers::handle_get_room_groups(app, tx.clone());
+    event_handlers::handle_get_property_data(app, tx);
 }
 
 #[allow(clippy::significant_drop_tightening)]
