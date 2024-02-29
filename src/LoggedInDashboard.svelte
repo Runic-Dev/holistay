@@ -6,8 +6,9 @@
   import type { TileConfig } from "./types";
   import { push } from "svelte-spa-router";
   import type { Property } from "./models/Property";
+  import { propertyStore } from "./store";
 
-  let properties: Property[] = [];
+  $: properties = [];
   let addingNewProperty = false;
 
   function addNewProperty(payload: any) {
@@ -25,9 +26,14 @@
   }
 
   onMount(async () => {
+    propertyStore.subscribe((propStore) => {
+      properties = propStore.properties;
+    });
     emit("get_properties");
-    await listen("properties_loaded", (event) => {
-      properties = event.payload as Property[];
+    await listen<Property[]>("properties_loaded", (event) => {
+      propertyStore.set({
+        properties: event.payload,
+      });
     });
   });
 </script>

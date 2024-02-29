@@ -1,5 +1,8 @@
 <script lang="ts">
-  import type { TileConfig, RoomGroupResponse as RoomGroupsDataEvent } from "src/types";
+  import type {
+    TileConfig,
+    RoomGroupResponse as RoomGroupsDataEvent,
+  } from "src/types";
   import { TileType } from "../../enums/ui";
   import MainLayout from "../../MainLayout.svelte";
   import RoomGroupComponent from "./RoomGroup.svelte";
@@ -8,26 +11,21 @@
   import RoomGroup from "../../models/RoomGroup";
   import { emit, listen } from "@tauri-apps/api/event";
   import { addBase64HtmlSyntax } from "../../utils/index";
-  import type { Property } from "../../models/Property";
-  import type { PropertyDataEvent } from "../../events";
+  import { propertyStore } from "../../store";
 
   export let params: { propertyId: string };
 
   export let addingNewRoomGroup: boolean = false;
 
-  let property: Property;
+  $: property = null;
 
-  $: roomGroupSummary = "To be done later";
-
-  $: roomGroupArray = [];
+  $: roomGroupSummary = "Loading...";
 
   function toggleNewRoomGroup() {
     addingNewRoomGroup = !addingNewRoomGroup;
   }
 
   function addNewRoomGroup(event: CustomEvent<TileConfig>) {
-    console.log(event);
-
     let newRoomGroupRequest = {
       name: event.detail.title,
       property_id: property.id,
@@ -43,22 +41,28 @@
   }
 
   onMount(async () => {
-    await emit("get_property_data", params.propertyId);
+    propertyStore.subscribe(x => {
+      property = x.properties.find(p => p.id == params.propertyId);
+      if(property.roomGroups) {
+        roomGroupSummary = `${property.name} has ${property.roomGroups.length} room groups`;
+      } else {
+        roomGroupSummary = `${property.name} has 0 room groups`;
+      }
+      property = {...property};
+    });
     await emit("get_room_groups", {
       property_id: params.propertyId,
     });
-    await listen<PropertyDataEvent>("property_data", (event) => {
-      if (event.payload.success) {
-        property = { ...event.payload.property };
-        roomGroupArray = event.payload.property.roomGroups;
-      }
-    });
     await listen<RoomGroupsDataEvent[]>("room_groups_data", (event) => {
-      roomGroupArray = event.payload.map(x => RoomGroup.FromRoomGroupResponse(x));
+      propertyStore.update(x => {
+        x.properties.find(prop => prop.id == params.propertyId).roomGroups =
+          event.payload.map(y => {
+            return RoomGroup.FromRoomGroupResponse(y);
+          });
+        return x;
+      });
     });
   });
-
-  
 </script>
 
 {#if property}
@@ -74,8 +78,8 @@
         </button>
       </div>
       <div class="room-groups content-container">
-        {#if roomGroupArray}
-          {#each roomGroupArray as roomGroup}
+        {#if property.roomGroups }
+          {#each property.roomGroups as roomGroup}
             <RoomGroupComponent {roomGroup} />
           {/each}
         {/if}
