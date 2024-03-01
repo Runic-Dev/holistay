@@ -1,25 +1,18 @@
 <script lang="ts">
   import type RoomGroup from "../../../src/models/RoomGroup";
-  import { onMount } from "svelte";
   import { push } from "svelte-spa-router";
   import Tile from "../../../src/common/Tile.svelte";
   import type { TileConfig } from "src/types";
   import { TileType } from "../../../src/enums/ui";
 
-  export let roomGroupLink: string = "";
   export let roomGroup: RoomGroup;
+  export let propertyId: string;
   let tileConfig: TileConfig = {
     type: TileType.Default,
     title: roomGroup.name,
     image: roomGroup.imageUrl,
-    clickAction: () => push(roomGroupLink)
+    clickAction: () => push(`/property/${propertyId}/roomgroup/${roomGroup.id}`)
   };
-
-  onMount(() => {
-    console.log(roomGroup.name);
-    console.log(roomGroup.imageUrl);
-    tileConfig.clickAction = () => push(`/roomgroup/${roomGroup.id}`)
-  });
 </script>
 
 <Tile {tileConfig} />

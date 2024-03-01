@@ -8,8 +8,8 @@
   const routes = {
     "/": WelcomeScreen,
     "/property/:propertyId": Property,
-    "/roomgroup/:roomGroupId": RoomGroup,
-    "/room/:roomId": Room,
+    "/property/:propertyId/roomgroup/:roomGroupId": RoomGroup,
+    "/property/:propertyId/roomgroup/:roomGroupId/room/:roomId": Room,
     "*": WelcomeScreen,
   };
 </script>

@@ -68,7 +68,7 @@
 {#if property}
   <MainLayout
     header={property.name}
-    image={addBase64HtmlSyntax(property.image, "jpeg")}
+    imageUrl={addBase64HtmlSyntax(property.image, "jpeg")}
   >
     <div class="manage-property">
       <div class="room-groups-controls">
@@ -80,7 +80,7 @@
       <div class="room-groups content-container">
         {#if property.roomGroups }
           {#each property.roomGroups as roomGroup}
-            <RoomGroupComponent {roomGroup} />
+            <RoomGroupComponent {roomGroup} propertyId={params.propertyId} />
           {/each}
         {/if}
         {#if addingNewRoomGroup}

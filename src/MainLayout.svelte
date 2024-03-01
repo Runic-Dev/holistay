@@ -2,12 +2,13 @@
   import { push } from "svelte-spa-router";
   import { userStore } from "./store";
   export let header: string | null = null;
+  console.log(header);
   export let imageUrl: string | null = null;
   $: username = $userStore.user ? $userStore.user["name"] : null;
 </script>
 
 <div class="main-dashboard">
-  <div class="top-bar" class:splash-topbar={imageUrl && header}>
+  <div class="top-bar" class:splash-topbar={header}>
     <div on:click={() => push("/")} on:keydown={() => push("/")} class="center">
       Holistay
     </div>
@@ -36,6 +37,11 @@
 
   {#if imageUrl && header}
     <div class="property-header" style="background-image: url({imageUrl});">
+      <h3>{header}</h3>
+      <div class="overlay" />
+    </div>
+  {:else if header != null}
+    <div class="property-header">
       <h3>{header}</h3>
       <div class="overlay" />
     </div>
