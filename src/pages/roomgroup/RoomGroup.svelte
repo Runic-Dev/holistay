@@ -6,6 +6,7 @@
   import Tile from "../../../src/common/Tile.svelte";
   import { push } from "svelte-spa-router";
   import { propertyStore } from "../../../src/store";
+  import { addBase64HtmlSyntax } from "../../../src/utils";
 
   export let params: {
     propertyId: string;
@@ -25,7 +26,9 @@
 
 <MainLayout
   header={roomGroup?.name ?? "Loading..."}
-  imageUrl={roomGroup?.image ?? null}
+  imageUrl={roomGroup?.imageUrl
+    ? addBase64HtmlSyntax(roomGroup.imageUrl, "jpeg")
+    : null}
 >
   {#if roomGroup}
     <div class="room-group-container content-container">
@@ -41,19 +44,21 @@
       <div class="room-plan">
         <h4>Rooms</h4>
         <div class="room-plan-container">
-          {#each roomGroup.rooms as room}
-            <Tile
-              tileConfig={{
-                type: TileType.Default,
-                title: room.name,
-                image: room.imageUrl,
-                clickAction: () =>
-                  push(
-                    `/property/${params.propertyId}/roomgroup/${params.roomGroupId}/room/${room.id}`,
-                  ),
-              }}
-            />
-          {/each}
+          {#if roomGroup?.rooms}
+            {#each roomGroup.rooms as room}
+              <Tile
+                tileConfig={{
+                  type: TileType.Default,
+                  title: room.name,
+                  image: room.imageUrl,
+                  clickAction: () =>
+                    push(
+                      `/property/${params.propertyId}/roomgroup/${params.roomGroupId}/room/${room.id}`,
+                    ),
+                }}
+              />
+            {/each}
+          {/if}
         </div>
       </div>
     </div>
