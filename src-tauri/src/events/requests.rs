@@ -9,7 +9,6 @@ pub struct NewPropertyRequest {
 #[derive(Serialize, Deserialize)]
 pub struct NewRoomGroupRequest {
     pub name: String,
-    // TODO: This should really be Uuid. Make it Uuid and deal with Deserialization
     pub property_id: String,
     pub image: Option<String>,
 }
@@ -23,5 +22,6 @@ pub struct GetRoomGroupsRequest {
 pub struct LoginRegisterRequest {
     pub username: String,
     pub password: String,
+    pub stay_logged_in: bool,
 }
 

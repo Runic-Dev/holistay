@@ -28,6 +28,7 @@ pub struct RoomGroup {
 
 #[derive(Serialize, Clone)]
 pub struct RegisteredUser {
+    pub id: String,
     pub username: String,
 }
 
@@ -74,3 +75,14 @@ impl FromRow<'_, SqliteRow> for PropertyRoomGroup {
         })
     }
 }
+
+impl FromRow<'_, SqliteRow> for RoomGroup {
+    fn from_row(row: &'_ SqliteRow) -> Result<Self, sqlx::Error> {
+        Ok(Self {
+            id: row.try_get("id")?,
+            name: row.try_get("name")?,
+            image: row.try_get("image")?,
+        })
+    }
+}
+

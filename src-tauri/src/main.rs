@@ -12,6 +12,7 @@ pub mod responses;
 
 mod db;
 pub mod utils;
+pub mod errors;
 
 #[tokio::main]
 async fn main() {

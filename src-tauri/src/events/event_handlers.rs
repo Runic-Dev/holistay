@@ -84,3 +84,13 @@ pub fn handle_register_attempt(app: &App, tx_clone: Sender<HolistayEvent>) {
     });
 }
 
+pub fn handle_init(app: &App, tx_clone: Sender<HolistayEvent>) {
+    app.listen_global("init", move |_| {
+        let register_event = HolistayEvent::Init;
+        let tx_clone = tx_clone.clone();
+        tauri::async_runtime::spawn(async move {
+            let _ = tx_clone.send(register_event).await;
+        });
+    });
+}
+

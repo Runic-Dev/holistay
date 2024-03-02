@@ -17,7 +17,6 @@ pub async fn add_new_room_group(pool_lock: MutexGuard<'_, Pool<Sqlite>>, new_roo
     } else {
         None
     };
-
     sqlx::query("INSERT INTO room_group (id, property_id, name, image) VALUES (?, ?, ?, ?)")
         .bind(id.to_string())
         .bind(new_room_group_request.property_id)
@@ -27,9 +26,7 @@ pub async fn add_new_room_group(pool_lock: MutexGuard<'_, Pool<Sqlite>>, new_roo
 }
 
 pub async fn get_room_groups(pool_lock: MutexGuard<'_, Pool<Sqlite>>, get_room_groups_request: GetRoomGroupsRequest) -> Result<Vec<RoomGroup>, sqlx::Error> {
-    sqlx::query_as!(
-        RoomGroup,
+    sqlx::query_as::<Sqlite, RoomGroup>(
         "SELECT id, name, image FROM room_group WHERE property_id = ?",
-        get_room_groups_request.property_id
-    ).fetch_all(&*pool_lock).await
+    ).bind(get_room_groups_request.property_id).fetch_all(&*pool_lock).await
 }

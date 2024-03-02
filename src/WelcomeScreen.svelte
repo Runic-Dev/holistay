@@ -8,21 +8,14 @@
     import type User from "./models/User";
 
     $: loggedInUser = $userStore.user;
-    $: if (loggedInUser) {
-        console.log($userStore);
-    } else {
-        console.log("No user");
-    }
 
     onMount(async () => {
-      await emit("init");
-      listen<InitResponse>("init_response", (event) => {
-        userStore.set({
-          user: event.payload.user
-        })
+      await listen<InitResponse>("init_response", (event) => {
+        userStore.set(event.payload);
       });
+      await emit("init");
     });
-    
+
     type InitResponse = {
       user: User | null
     }

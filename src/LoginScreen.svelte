@@ -3,11 +3,14 @@
   import { onMount } from "svelte";
   import { listen } from "@tauri-apps/api/event";
   import { userStore } from "./store";
+
   let isRegister = true;
 
   let username = "",
     password = "",
     repeatPassword = "";
+
+  let stayLoggedIn = false;
 
   $: toggleButtonText = isRegister
     ? "I already have an account"
@@ -41,28 +44,25 @@
     emit(event_name, {
       username,
       password,
+      "stay_logged_in": stayLoggedIn
     });
   }
   onMount(async () => {
     // TODO: Reconsider multiple listens in the frontend
     await listen("user_registered", (event) => {
       console.log("user_registered");
-      console.log(event);
       userStore.set({
-        //TODO: Why have I hard-coded a fake ID here?
         user: {
-          id: "testid",
+          id: event.payload["id"],
           name: event.payload["username"],
         },
       });
     });
     await listen("user_logged_in", (event) => {
       console.log("user_logged_in");
-      console.log(event);
       userStore.set({
-        //TODO: Why have I hard-coded a fake ID here?
         user: {
-          id: "testid",
+          id: event.payload["id"],
           name: event.payload["username"],
         },
       });
@@ -101,6 +101,9 @@
         <input id="login-password" bind:value={password} type="password" />
       </div>
     {/if}
+
+    <label for="stay-logged-in">Stay logged in?</label>
+    <input id="stay-logged-in" bind:checked={stayLoggedIn} on:click={() => console.log(stayLoggedIn)} type="checkbox" />
 
     <button on:click={toggleForm}>{toggleButtonText}</button>
     <button

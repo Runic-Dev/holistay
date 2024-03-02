@@ -27,11 +27,10 @@ pub async fn add_new_property(pool_lock: MutexGuard<'_, Pool<Sqlite>>, new_prope
 
 pub async fn get_property(pool_lock: MutexGuard<'_, Pool<Sqlite>>, property_id: String) -> Result<Property, sqlx::Error> {
 
-    match sqlx::query_as!(
-        PropertyRoomGroupRow,
+    match sqlx::query_as::<Sqlite, PropertyRoomGroupRow>(
         "SELECT p.id as property_id, p.name as property_name, p.image as property_image, rg.id as room_group_id, rg.name as room_group_name, rg.image as room_group_image FROM property p LEFT OUTER JOIN room_group rg ON p.id = rg.property_id WHERE p.id = ?",
-        property_id
     )
+    .bind(property_id)
     .fetch_all(&*pool_lock)
     .await {
             Ok(property_room_group_rows) => {

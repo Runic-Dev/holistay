@@ -35,6 +35,12 @@ impl User {
             id, username
         }
     }
+    pub fn from_user_row(user_row: UserRow) -> Result<User, uuid::Error> {
+        Ok(Self {
+            id: Uuid::parse_str(&user_row.id)?,
+            username: user_row.username
+        })
+    }
 }
 
 impl Serialize for User {
@@ -111,3 +117,10 @@ impl HasHolistayResponse<User> for Option<User> {
         HolistayResponse::new(value, self)
     }
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct UserRow {
+    pub id: String,
+    pub username: String
+}
+

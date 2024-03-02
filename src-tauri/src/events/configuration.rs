@@ -7,7 +7,7 @@ use tokio::sync::Mutex;
 
 use crate::models::{RegisteredUser, LoggedInUser};
 
-use super::{HolistayEvent, auth_service::{register_user, login_user}, property_service::{add_new_property, get_property_partials, get_property}, room_group_service::{add_new_room_group, get_room_groups}};
+use super::{HolistayEvent, auth_service::{register_user, login_user, get_default_user}, property_service::{add_new_property, get_property_partials, get_property}, room_group_service::{add_new_room_group, get_room_groups}};
 
 pub async fn configure_event_handler(mut rx: Receiver<HolistayEvent>, mutex_pool: Mutex<Pool<Sqlite>>, app_handle: AppHandle) {
     while let Some(holistay_event) = rx.recv().await {
@@ -26,10 +26,11 @@ pub async fn configure_event_handler(mut rx: Receiver<HolistayEvent>, mutex_pool
                                 }),
                             );
                         },
-                        |()| {
+                        |id| {
                             let _ = app_handle.emit_all(
                                 "user_registered",
                                 RegisteredUser {
+                                    id: id.to_string(),
                                     username: register_attempt.username,
                                 },
                             );
@@ -86,6 +87,16 @@ pub async fn configure_event_handler(mut rx: Receiver<HolistayEvent>, mutex_pool
                     .await
                     .map_or_else(|err| println!("Error loading room groups: {err:?}"), |room_groups| {
                         let _ = app_handle.emit_all("room_groups_data", &room_groups);
+                    });
+            },
+            HolistayEvent::Init => {
+                let pool_lock = mutex_pool.lock().await;
+                get_default_user(pool_lock)
+                    .await
+                    .map_or_else(|err| println!("Error checking for default user: {err:?}"), |user_row_option| {
+                        let _ = app_handle.emit_all("init_response", json!({
+                            "user": &user_row_option
+                        }));
                     });
             },
         }

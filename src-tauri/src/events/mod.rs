@@ -24,8 +24,8 @@ use self::{
 };
 
 pub enum HolistayEvent {
+    Init,
     UpdateLoggedInUser(User),
-    // TODO: YAGNI
     Error(String),
     NoLoggedInUser,
     RegisterAttempt(LoginRegisterRequest),
@@ -40,6 +40,7 @@ pub enum HolistayEvent {
 
 /// # Panics
 pub fn listen_to_frontend(app: &App, tx: Sender<HolistayEvent>) {
+    event_handlers::handle_init(app, tx.clone());
     event_handlers::handle_register_attempt(app, tx.clone());
     event_handlers::handle_login_attempt(app, tx.clone());
     event_handlers::handle_add_new_property(app, tx.clone());
