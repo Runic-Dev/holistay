@@ -3,6 +3,9 @@
     import LoginScreen from "./LoginScreen.svelte";
     import { userStore } from "./store";
     import LoggedInDashboard from "./LoggedInDashboard.svelte";
+    import { onMount } from "svelte";
+    import { emit, listen } from "@tauri-apps/api/event";
+    import type User from "./models/User";
 
     $: loggedInUser = $userStore.user;
     $: if (loggedInUser) {
@@ -10,6 +13,20 @@
     } else {
         console.log("No user");
     }
+
+    onMount(async () => {
+      await emit("init");
+      listen<InitResponse>("init_response", (event) => {
+        userStore.set({
+          user: event.payload.user
+        })
+      });
+    });
+    
+    type InitResponse = {
+      user: User | null
+    }
+
 </script>
 
 <MainLayout>
