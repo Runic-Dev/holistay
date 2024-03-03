@@ -6,6 +6,7 @@
   let onClickFunc: () => Promise<void> | void;
   export let tileConfig: TileConfig;
 
+  let newRoomName: string = "";
   let newRoomGroupName: string = "";
   let newPropertyName: string = "";
   let tileImageFilePath: string = "";
@@ -16,6 +17,16 @@
   function getPropertyBackgroundImg(): string {
     return `data:image/jpeg;base64,${tileConfig.image}`;
   }
+
+  function confirmNewRoom() {
+    tileConfig.type = TileType.Default;
+    tileConfig.title = newRoomName;
+    dispatch("confirmedRoom", {
+      title: newRoomName,
+      image: tileImageFilePath
+    });
+  }
+
 
   function confirmNewRoomGroup() {
     tileConfig.type = TileType.Default;
@@ -80,6 +91,14 @@
     <div class="overlay" />
   </div>
   {/if}
+{:else if tileConfig.type == TileType.NewRoom}
+  <div class="tile newRoom">
+    <label for="roomName">Room name:</label>
+    <input bind:value={newRoomName} id="roomName" type="text" />
+    <button on:click={confirmNewRoom}>Create</button>
+    <button on:click={selectImage}>Select Image</button>
+    <div class="overlay" />
+  </div>
 {:else if tileConfig.type == TileType.NewRoomGroup}
   <div class="tile newRoomGroup">
     <label for="roomGroupName">RoomGroup name:</label>
@@ -105,7 +124,8 @@
     @include tile;
 
     &.newRoomGroup,
-    &.newProperty {
+    &.newProperty,
+    &.newRoom {
       display: flex;
       flex-direction: column;
       align-items: center;

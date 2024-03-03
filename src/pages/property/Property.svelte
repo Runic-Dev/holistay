@@ -12,6 +12,8 @@
   import { addBase64HtmlSyntax } from "@/utils/index";
   import { propertyStore } from "@/store";
   import { emit, listen } from "@tauri-apps/api/event";
+    import Description from "@/common/Description.svelte";
+    import { DescribableEntity } from "@/common/types";
 
   export let params: { propertyId: string };
 
@@ -77,6 +79,7 @@
           Add RoomGroup
         </button>
       </div>
+      <Description type={DescribableEntity.Property} id={property.id} description={property.description ?? "No description"} />
       <div class="room-groups content-container">
         {#if property.roomGroups }
           {#each property.roomGroups as roomGroup}

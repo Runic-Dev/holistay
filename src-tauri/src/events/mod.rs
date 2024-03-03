@@ -18,7 +18,7 @@ use self::{
         LoginRegisterRequest,
         NewPropertyRequest, 
         NewRoomGroupRequest, 
-        GetRoomGroupsRequest
+        GetRoomGroupsRequest, NewDescriptionRequest
     }, 
     configuration::configure_event_handler
 };
@@ -35,6 +35,8 @@ pub enum HolistayEvent {
     GetProperties,
     PropertyDataRequested(String),
     GetRoomGroups(GetRoomGroupsRequest),
+    NewRoomGroupDescription(NewDescriptionRequest),
+    NewPropertyDescription(NewDescriptionRequest)
 }
 
 
@@ -47,7 +49,9 @@ pub fn listen_to_frontend(app: &App, tx: Sender<HolistayEvent>) {
     event_handlers::handle_add_new_room_group(app, tx.clone());
     event_handlers::handle_add_property(app, tx.clone());
     event_handlers::handle_get_room_groups(app, tx.clone());
-    event_handlers::handle_get_property_data(app, tx);
+    event_handlers::handle_get_property_data(app, tx.clone());
+    event_handlers::handle_new_room_group_desc(app, tx.clone());
+    event_handlers::handle_new_property_desc(app, tx.clone());
 }
 
 #[allow(clippy::significant_drop_tightening)]

@@ -99,6 +99,28 @@ pub async fn configure_event_handler(mut rx: Receiver<HolistayEvent>, mutex_pool
                         }));
                     });
             },
+            HolistayEvent::NewRoomGroupDescription(new_room_group_desc_request) => {
+                let pool_lock = mutex_pool.lock().await;
+                super::room_group_service::update_description(pool_lock, new_room_group_desc_request)
+                    .await
+                    .map_or_else(|err| println!("Error updating room group description: {err:?}"), |(id, desc)| {
+                        let event_name = format!("room_group_desc_updated_for_{}", id);
+                        let _ = app_handle.emit_all(&event_name, json!({
+                            "description": desc
+                        }));
+                    });
+            },
+            HolistayEvent::NewPropertyDescription(new_property_desc_request) => {
+                let pool_lock = mutex_pool.lock().await;
+                super::property_service::update_description(pool_lock, new_property_desc_request)
+                    .await
+                    .map_or_else(|err| println!("Error updating property description: {err:?}"), |(id, desc)| {
+                        let event_name = format!("property_desc_updated_for_{}", id);
+                        let _ = app_handle.emit_all(&event_name, json!({
+                            "description": desc
+                        }));
+                    });
+            },
         }
     }
 }

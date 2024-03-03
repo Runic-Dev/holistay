@@ -1,7 +1,7 @@
 use tauri::{App, Manager};
 use tokio::sync::mpsc::Sender;
 
-use super::{HolistayEvent, requests::{GetRoomGroupsRequest, NewRoomGroupRequest, NewPropertyRequest, LoginRegisterRequest}};
+use super::{HolistayEvent, requests::{GetRoomGroupsRequest, NewRoomGroupRequest, NewPropertyRequest, LoginRegisterRequest, NewDescriptionRequest}};
 
 pub fn handle_get_property_data(app: &App, tx: Sender<HolistayEvent>) {
     app.listen_global("get_property_data", move |event| {
@@ -94,3 +94,29 @@ pub fn handle_init(app: &App, tx_clone: Sender<HolistayEvent>) {
     });
 }
 
+pub fn handle_new_room_group_desc(app: &App, tx_clone: Sender<HolistayEvent>) {
+    app.listen_global("new_room_group_description", move |event| {
+        let payload = event.payload().expect("Payload expected");
+        let new_room_group_description_request: NewDescriptionRequest =
+            serde_json::from_str(payload).expect("Couldn't parse struct from payload");
+        let register_event = HolistayEvent::NewRoomGroupDescription(new_room_group_description_request);
+        let tx_clone = tx_clone.clone();
+        tauri::async_runtime::spawn(async move {
+            let _ = tx_clone.send(register_event).await;
+        });
+    });
+}
+
+
+pub fn handle_new_property_desc(app: &App, tx_clone: Sender<HolistayEvent>) {
+    app.listen_global("new_property_description", move |event| {
+        let payload = event.payload().expect("Payload expected");
+        let new_property_description_request: NewDescriptionRequest =
+            serde_json::from_str(payload).expect("Couldn't parse struct from payload");
+        let register_event = HolistayEvent::NewPropertyDescription(new_property_description_request);
+        let tx_clone = tx_clone.clone();
+        tauri::async_runtime::spawn(async move {
+            let _ = tx_clone.send(register_event).await;
+        });
+    });
+}

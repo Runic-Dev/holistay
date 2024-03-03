@@ -7,7 +7,7 @@ use uuid::Uuid;
 
 use crate::models::{PropertyPartial, Property, RoomGroup};
 
-use super::NewPropertyRequest;
+use super::{NewPropertyRequest, requests::NewDescriptionRequest};
 
 pub async fn get_property_partials(pool_lock: MutexGuard<'_, Pool<Sqlite>>) -> Result<Vec<PropertyPartial>, sqlx::Error> {
     sqlx::query_as::<Sqlite, PropertyPartial>("SELECT id, name, image FROM property")
@@ -42,6 +42,7 @@ pub async fn get_property(pool_lock: MutexGuard<'_, Pool<Sqlite>>, property_id: 
                     id : x.room_group_id?,
                     name: x.room_group_name?,
                     image: x.room_group_image,
+                    description: String::new()
                 })).collect::<Vec<RoomGroup>>();            
                 Ok(Property {
                     id: property_data.property_id,
@@ -57,6 +58,13 @@ pub async fn get_property(pool_lock: MutexGuard<'_, Pool<Sqlite>>, property_id: 
         }
 }
 
+pub async fn update_description(pool_lock: MutexGuard<'_, Pool<Sqlite>>, new_property_desc_request: NewDescriptionRequest) -> Result<(String, String), sqlx::Error> {
+    sqlx::query("UPDATE property SET description = ? WHERE id = ?")
+        .bind(&new_property_desc_request.description)
+        .bind(&new_property_desc_request.id)
+        .execute(&*pool_lock).await.map_or_else(|err| Err(err), |_| Ok((new_property_desc_request.id, new_property_desc_request.description)))
+}
+
 #[derive(Clone, FromRow)]
 struct PropertyRoomGroupRow {
     pub property_id: String,
@@ -66,3 +74,4 @@ struct PropertyRoomGroupRow {
     pub room_group_name: Option<String>,
     pub room_group_image: Option<String>
 }
+

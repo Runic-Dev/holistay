@@ -25,3 +25,9 @@ pub struct LoginRegisterRequest {
     pub stay_logged_in: bool,
 }
 
+#[derive(Deserialize, Clone)]
+pub struct NewDescriptionRequest {
+    pub id: String,
+    pub description: String,
+}
+

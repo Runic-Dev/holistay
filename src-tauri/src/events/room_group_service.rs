@@ -7,7 +7,7 @@ use uuid::Uuid;
 
 use crate::models::RoomGroup;
 
-use super::requests::{NewRoomGroupRequest, GetRoomGroupsRequest};
+use super::requests::{NewRoomGroupRequest, GetRoomGroupsRequest, NewDescriptionRequest};
 
 pub async fn add_new_room_group(pool_lock: MutexGuard<'_, Pool<Sqlite>>, new_room_group_request: NewRoomGroupRequest) -> Result<sqlx::sqlite::SqliteQueryResult, sqlx::Error> {
     let id = Uuid::new_v4();
@@ -29,4 +29,11 @@ pub async fn get_room_groups(pool_lock: MutexGuard<'_, Pool<Sqlite>>, get_room_g
     sqlx::query_as::<Sqlite, RoomGroup>(
         "SELECT id, name, image, description FROM room_group WHERE property_id = ?",
     ).bind(get_room_groups_request.property_id).fetch_all(&*pool_lock).await
+}
+
+pub async fn update_description(pool_lock: MutexGuard<'_, Pool<Sqlite>>, new_room_group_desc_request: NewDescriptionRequest) -> Result<(String, String), sqlx::Error> {
+    sqlx::query("UPDATE room_group SET description = ? WHERE id = ?")
+        .bind(&new_room_group_desc_request.description)
+        .bind(&new_room_group_desc_request.id)
+        .execute(&*pool_lock).await.map_or_else(|err| Err(err), |_| Ok((new_room_group_desc_request.id, new_room_group_desc_request.description)))
 }

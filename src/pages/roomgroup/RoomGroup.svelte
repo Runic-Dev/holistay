@@ -2,24 +2,53 @@
   import { onMount } from "svelte";
   import MainLayout from "@/MainLayout.svelte";
   import { TileType } from "@/enums/ui";
-  import Description from "./Description.svelte";
   import Tile from "@/common/Tile.svelte";
   import { push } from "svelte-spa-router";
   import { propertyStore } from "@/store";
   import { addBase64HtmlSyntax } from "@/utils";
+  import { DescribableEntity } from "@/common/types";
+  import Description from "@/common/Description.svelte";
+    import { emit } from "@tauri-apps/api/event";
+    import type { TileConfig } from "@/types";
 
   export let params: {
     propertyId: string;
     roomGroupId: string;
   };
 
+  let addingNewRoom = false;
+
   $: roomGroup = null;
 
+  function toggleNewRoom() {
+    addingNewRoom = !addingNewRoom;
+  }
+
+
+  function addNewRoom(event: CustomEvent<TileConfig>) {
+    let newRoomRequest = {
+      name: event.detail.title,
+      property_id: params.propertyId,
+      room_group_id: roomGroup.id,
+      image: event.detail.image,
+    };
+
+    emit("add_new_room", newRoomRequest);
+    emit("get_rooms", {
+      property_id: params.propertyId,
+      room_group_id: roomGroup.id
+    });
+
+    toggleNewRoom();
+  }
+
   onMount(() => {
-    propertyStore.subscribe((x) => {
-      roomGroup = x.properties
-        .find((p) => p.id == params.propertyId)
-        .roomGroups.find((rm) => rm.id == params.roomGroupId);
+    propertyStore.subscribe(x => {
+      let parentProperty = x.properties
+        .find((p) => p.id == params.propertyId);
+      if(parentProperty.roomGroups){
+        roomGroup = parentProperty.roomGroups?.find((rm) => rm.id == params.roomGroupId);
+      }
     });
   });
 </script>
@@ -40,7 +69,16 @@
           <button>Change Image</button>
         {/if}
       </div>
-      <Description description={roomGroup.description ?? "No description"} />
+      <Description
+        type={DescribableEntity.RoomGroup}
+        id={roomGroup.id}
+        description={roomGroup.description ?? "No description"}
+      />
+      <div class="room-controls">
+        <button on:click={toggleNewRoom} class="add-room">
+          Add Room
+        </button>
+      </div>
       <div class="room-plan">
         <h4>Rooms</h4>
         <div class="room-plan-container">
@@ -58,6 +96,17 @@
                 }}
               />
             {/each}
+          {/if}
+          {#if addingNewRoom}
+          <Tile
+            tileConfig={{
+              type: TileType.NewRoom,
+              title: null,
+              image: null,
+              clickAction: null,
+            }}
+            on:confirmedRoom={addNewRoom}
+          />
           {/if}
         </div>
       </div>
