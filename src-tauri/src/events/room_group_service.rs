@@ -27,6 +27,6 @@ pub async fn add_new_room_group(pool_lock: MutexGuard<'_, Pool<Sqlite>>, new_roo
 
 pub async fn get_room_groups(pool_lock: MutexGuard<'_, Pool<Sqlite>>, get_room_groups_request: GetRoomGroupsRequest) -> Result<Vec<RoomGroup>, sqlx::Error> {
     sqlx::query_as::<Sqlite, RoomGroup>(
-        "SELECT id, name, image FROM room_group WHERE property_id = ?",
+        "SELECT id, name, image, description FROM room_group WHERE property_id = ?",
     ).bind(get_room_groups_request.property_id).fetch_all(&*pool_lock).await
 }

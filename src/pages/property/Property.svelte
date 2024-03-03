@@ -50,9 +50,6 @@
       }
       property = {...property};
     });
-    await emit("get_room_groups", {
-      property_id: params.propertyId,
-    });
     await listen<RoomGroupsDataEvent[]>("room_groups_data", (event) => {
       propertyStore.update(x => {
         x.properties.find(prop => prop.id == params.propertyId).roomGroups =
@@ -61,6 +58,9 @@
           });
         return x;
       });
+    });
+    await emit("get_room_groups", {
+      property_id: params.propertyId,
     });
   });
 </script>

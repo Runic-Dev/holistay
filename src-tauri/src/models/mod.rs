@@ -23,7 +23,8 @@ pub struct Contact {
 pub struct RoomGroup {
     pub id: String,
     pub name: String,
-    pub image: Option<String>
+    pub image: Option<String>,
+    pub description: String
 }
 
 #[derive(Serialize, Clone)]
@@ -82,6 +83,7 @@ impl FromRow<'_, SqliteRow> for RoomGroup {
             id: row.try_get("id")?,
             name: row.try_get("name")?,
             image: row.try_get("image")?,
+            description: row.try_get("description")?
         })
     }
 }

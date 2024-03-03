@@ -5,6 +5,7 @@
   import { dialog } from "@tauri-apps/api";
   let onClickFunc: () => Promise<void> | void;
   export let tileConfig: TileConfig;
+
   let newRoomGroupName: string = "";
   let newPropertyName: string = "";
   let tileImageFilePath: string = "";

@@ -17,6 +17,7 @@ export default class RoomGroup {
     let roomGroup = new RoomGroup(response.name);
     roomGroup.id = response.id;
     roomGroup.imageUrl = response.image;
+    roomGroup.description = response.description;
     return roomGroup;
   }
 }

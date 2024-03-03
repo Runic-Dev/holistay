@@ -40,6 +40,7 @@ export type TileConfig = {
 export type RoomGroupResponse = {
   id: string,
   name: string,
-  image: string
+  image: string,
+  description: string
 };
 
