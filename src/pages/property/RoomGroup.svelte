@@ -1,9 +1,9 @@
 <script lang="ts">
-  import type RoomGroup from "../../../src/models/RoomGroup";
+  import type RoomGroup from "@/models/RoomGroup";
   import { push } from "svelte-spa-router";
-  import Tile from "../../../src/common/Tile.svelte";
-  import type { TileConfig } from "src/types";
-  import { TileType } from "../../../src/enums/ui";
+  import Tile from "@/common/Tile.svelte";
+  import type { TileConfig } from "@/types";
+  import { TileType } from "@/enums/ui";
 
   export let roomGroup: RoomGroup;
   export let propertyId: string;

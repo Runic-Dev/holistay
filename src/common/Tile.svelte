@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { TileConfig } from "src/types";
-  import { TileType } from "../enums/ui";
+  import { TileType } from "@/enums/ui";
   import { onMount, createEventDispatcher } from "svelte";
   import { dialog } from "@tauri-apps/api";
   let onClickFunc: () => Promise<void> | void;

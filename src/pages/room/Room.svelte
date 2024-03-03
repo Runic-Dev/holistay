@@ -1,8 +1,8 @@
 <script lang="ts">
-  import type { Room } from "src/types";
-  import MainLayout from "../../../src/MainLayout.svelte";
+  import type { Room } from "@/types";
+  import MainLayout from "@/MainLayout.svelte";
   import { onMount } from "svelte";
-  import { propertyStore } from "../../../src/store";
+  import { propertyStore } from "@/store";
   export let room: Room;
   export let params: {
     roomId: string;

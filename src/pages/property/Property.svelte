@@ -3,15 +3,15 @@
     TileConfig,
     RoomGroupResponse as RoomGroupsDataEvent,
   } from "src/types";
-  import { TileType } from "../../enums/ui";
-  import MainLayout from "../../MainLayout.svelte";
-  import RoomGroupComponent from "./RoomGroup.svelte";
+  import { TileType } from "@/enums/ui";
+  import MainLayout from "@/MainLayout.svelte";
+  import RoomGroupComponent from "@/pages/property/RoomGroup.svelte";
   import { onMount } from "svelte";
-  import Tile from "../../common/Tile.svelte";
-  import RoomGroup from "../../models/RoomGroup";
+  import Tile from "@/common/Tile.svelte";
+  import RoomGroup from "@/models/RoomGroup";
+  import { addBase64HtmlSyntax } from "@/utils/index";
+  import { propertyStore } from "@/store";
   import { emit, listen } from "@tauri-apps/api/event";
-  import { addBase64HtmlSyntax } from "../../utils/index";
-  import { propertyStore } from "../../store";
 
   export let params: { propertyId: string };
 

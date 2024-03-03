@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Room } from "src/types";
+  import type { Room } from "@/types";
 
   export let room: Room;
 </script>

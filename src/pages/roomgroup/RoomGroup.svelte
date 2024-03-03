@@ -1,12 +1,12 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import MainLayout from "../../MainLayout.svelte";
-  import { TileType } from "../../../src/enums/ui";
+  import MainLayout from "@/MainLayout.svelte";
+  import { TileType } from "@/enums/ui";
   import Description from "./Description.svelte";
-  import Tile from "../../../src/common/Tile.svelte";
+  import Tile from "@/common/Tile.svelte";
   import { push } from "svelte-spa-router";
-  import { propertyStore } from "../../../src/store";
-  import { addBase64HtmlSyntax } from "../../../src/utils";
+  import { propertyStore } from "@/store";
+  import { addBase64HtmlSyntax } from "@/utils";
 
   export let params: {
     propertyId: string;
