@@ -1,4 +1,4 @@
-use std::{fs, collections::HashMap};
+use std::{fs, collections::HashSet};
 
 use base64::{engine::general_purpose, Engine};
 use tokio::sync::MutexGuard;
@@ -25,53 +25,29 @@ pub async fn add_new_property(pool_lock: MutexGuard<'_, Pool<Sqlite>>, new_prope
         .execute(&*pool_lock).await 
 }
 
-pub async fn get_property(pool_lock: MutexGuard<'_, Pool<Sqlite>>, property_id: String) -> Result<Property, sqlx::Error> {
+pub async fn get_property(pool_lock: MutexGuard<'_, Pool<Sqlite>>, property_id: String) -> Result<Option<Property>, sqlx::Error> {
     match sqlx::query_as::<Sqlite, PropertyRoomGroupRoomRow>(
 "
 SELECT p.id as property_id, p.name as property_name, p.image as property_image, 
 rg.id as room_group_id, rg.name as room_group_name, rg.image as room_group_image, 
-r.id as room_id, r.room_group_id as room_room_group_id, r.name as room_name, r.image as room_image FROM property p LEFT OUTER JOIN room_group rg 
+r.id as room_id, r.name as room_name, r.image as room_image FROM property p LEFT OUTER JOIN room_group rg 
 ON p.id = rg.property_id LEFT OUTER JOIN room r ON rg.id = r.room_group_id WHERE p.id = ?",
     )
-    .bind(property_id)
+    .bind(property_id.clone())
     .fetch_all(&*pool_lock)
     .await {
             Ok(property_room_group_rows) => {
-                let property_data = match property_room_group_rows.first() {
-                    Some(first_entry) => first_entry.clone(),
-                    None => panic!("Dang"),
-                };
-
-                let mut roomsMap = HashMap::<String, Vec<Room>>::new();
-
-                property_room_group_rows.iter().filter(|x| {
-                    x.room_id.is_some() && x.room_name.is_some() && x.room_room_group_id.is_some()
-                }).for_each(|row| {
-                    if let (Some(room_id), Some(room_room_group_id), Some(room_name)) = (row.room_id.as_ref(), row.room_room_group_id.as_ref(), row.room_name.as_ref()) {
-                        let room = Room { id: room_id.to_string(), name: room_name.to_string(), image: row.room_image.clone() };
-                        if let Some(room_vec) = roomsMap.get_mut(room_room_group_id) {
-                            room_vec.push(room);
-                        } else {
-                            roomsMap.insert(room_room_group_id.to_string(), vec![room]);
-                        }
-                    }
-                });
-
-
-                let room_groups = property_room_group_rows.into_iter().filter_map(|x| Some(RoomGroup {
-                    id : x.room_group_id.clone()?,
-                    name: x.room_group_name?,
-                    image: x.room_group_image,
-                    description: String::new(),
-                    rooms: roomsMap.get(&x.room_group_id?).map_or_else(|| Vec::<Room>::new(), |room_vec| room_vec.clone())
-                })).collect::<Vec<RoomGroup>>();            
-
-                Ok(Property {
-                    id: property_data.property_id,
-                    name: property_data.property_name,
-                    image: property_data.property_image,
-                    room_groups
-                })
+                if let Some(property_data) = property_room_group_rows.first() {
+                    let property = Property {
+                        id: property_data.property_id.to_string(),
+                        name: property_data.property_name.to_string(),
+                        image: property_data.property_image.clone(),
+                        room_groups: room_groups_from_rows(&property_room_group_rows)
+                    };
+                    Ok(Some(property))
+                } else {
+                    Ok(None)
+                }
             },
             Err(err) => {
                 println!("Error getting property from database: {err:?}");
@@ -88,16 +64,6 @@ pub async fn update_description(pool_lock: MutexGuard<'_, Pool<Sqlite>>, new_pro
 }
 
 #[derive(Clone, FromRow)]
-struct PropertyRoomGroupRow {
-    pub property_id: String,
-    pub property_name: String,
-    pub property_image: Option<String>,
-    pub room_group_id: Option<String>,
-    pub room_group_name: Option<String>,
-    pub room_group_image: Option<String>
-}
-
-#[derive(Clone, FromRow)]
 struct PropertyRoomGroupRoomRow {
     pub property_id: String,
     pub property_name: String,
@@ -106,8 +72,49 @@ struct PropertyRoomGroupRoomRow {
     pub room_group_name: Option<String>,
     pub room_group_image: Option<String>,
     pub room_id: Option<String>,
-    pub room_room_group_id: Option<String>,
     pub room_name: Option<String>,
     pub room_image: Option<String>
+}
+
+impl PartialEq for RoomGroup {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+
+impl Eq for RoomGroup {}
+
+impl PartialEq for Room {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+
+impl Eq for Room {}
+
+fn room_groups_from_rows(rows: &Vec<PropertyRoomGroupRoomRow>) -> Vec<RoomGroup> {
+    rows.into_iter().fold(HashSet::<RoomGroup>::new(), |mut rg_set, row| {
+        if let (Some(room_group_id), Some(room_group_name)) = (row.room_group_id.as_ref(), row.room_group_name.as_ref()) {
+            let room_group = RoomGroup {
+                id: room_group_id.to_string(),
+                name: room_group_name.to_string(),
+                image: row.room_group_image.clone(),
+                description: String::new(),
+                rooms: rooms_from_rows(rows.clone(), room_group_id)
+            };
+            rg_set.insert(room_group);
+        }
+        rg_set
+    }).into_iter().collect()
+}
+
+fn rooms_from_rows(rows: Vec<PropertyRoomGroupRoomRow>, room_group_id: &str) -> Vec<Room> {
+    rows.into_iter().filter(|f| f.room_group_id.clone().is_some_and(|x| x == room_group_id)).fold(HashSet::<Room>::new(), |mut room_set, row| {
+        if let (Some(room_id), Some(room_name)) = (row.room_id, row.room_name) {
+            let room = Room { id: room_id, name: room_name, image: row.room_image.clone() };
+            room_set.insert(room);
+        }
+        room_set
+    }).into_iter().collect()
 }
 

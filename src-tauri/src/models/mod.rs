@@ -19,7 +19,7 @@ pub struct Contact {
     email: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Hash)]
 pub struct RoomGroup {
     pub id: String,
     pub name: String,
@@ -28,13 +28,12 @@ pub struct RoomGroup {
     pub rooms: Vec<Room>
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Hash)]
 pub struct Room {
     pub id: String,
     pub name: String,
     pub image: Option<String>,
 }
-
 
 #[derive(Serialize, Clone)]
 pub struct RegisteredUser {
