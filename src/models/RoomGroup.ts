@@ -1,5 +1,6 @@
-import type { Room, RoomGroupResponse } from "src/types";
+import type { RoomGroupResponse } from "src/types";
 import { v4 as uuid } from "uuid";
+import type Room from "./Room";
 
 export default class RoomGroup {
   public id: string
@@ -18,6 +19,7 @@ export default class RoomGroup {
     roomGroup.id = response.id;
     roomGroup.imageUrl = response.image;
     roomGroup.description = response.description;
+    //roomGroup.rooms = response.
     return roomGroup;
   }
 }

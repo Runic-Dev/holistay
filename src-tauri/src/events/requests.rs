@@ -31,3 +31,15 @@ pub struct NewDescriptionRequest {
     pub description: String,
 }
 
+#[derive(Deserialize, Clone)]
+pub struct NewRoomRequest {
+    pub name: String,
+    pub room_group_id: String,
+    pub image: Option<String>,
+    pub description: Option<String>,
+}
+
+#[derive(Deserialize, Clone)]
+pub struct GetRoomsRequest {
+    pub room_group_id: String,
+}

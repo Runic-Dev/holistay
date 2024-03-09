@@ -31,6 +31,7 @@
     });
     emit("get_properties");
     await listen<Property[]>("properties_loaded", (event) => {
+      console.log(event.payload);
       propertyStore.set({
         properties: event.payload,
       });

@@ -9,7 +9,7 @@
   let newRoomName: string = "";
   let newRoomGroupName: string = "";
   let newPropertyName: string = "";
-  let tileImageFilePath: string = "";
+  let tileImageFilePath: string | null;
   let loadedImage: string | null = null;
 
   const dispatch = createEventDispatcher();

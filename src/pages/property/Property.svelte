@@ -12,8 +12,8 @@
   import { addBase64HtmlSyntax } from "@/utils/index";
   import { propertyStore } from "@/store";
   import { emit, listen } from "@tauri-apps/api/event";
-    import Description from "@/common/Description.svelte";
-    import { DescribableEntity } from "@/common/types";
+  import Description from "@/common/Description.svelte";
+  import { DescribableEntity } from "@/common/types";
 
   export let params: { propertyId: string };
 
@@ -43,19 +43,19 @@
   }
 
   onMount(async () => {
-    propertyStore.subscribe(x => {
-      property = x.properties.find(p => p.id == params.propertyId);
-      if(property.roomGroups) {
+    propertyStore.subscribe((x) => {
+      property = x.properties.find((p) => p.id == params.propertyId);
+      if (property.roomGroups) {
         roomGroupSummary = `${property.name} has ${property.roomGroups.length} room groups`;
       } else {
         roomGroupSummary = `${property.name} has 0 room groups`;
       }
-      property = {...property};
+      property = { ...property };
     });
     await listen<RoomGroupsDataEvent[]>("room_groups_data", (event) => {
-      propertyStore.update(x => {
-        x.properties.find(prop => prop.id == params.propertyId).roomGroups =
-          event.payload.map(y => {
+      propertyStore.update((x) => {
+        x.properties.find((prop) => prop.id == params.propertyId).roomGroups =
+          event.payload.map((y) => {
             return RoomGroup.FromRoomGroupResponse(y);
           });
         return x;
@@ -79,9 +79,13 @@
           Add RoomGroup
         </button>
       </div>
-      <Description type={DescribableEntity.Property} id={property.id} description={property.description ?? "No description"} />
+      <Description
+        type={DescribableEntity.Property}
+        id={property.id}
+        description={property.description ?? "No description"}
+      />
       <div class="room-groups content-container">
-        {#if property.roomGroups }
+        {#if property.roomGroups}
           {#each property.roomGroups as roomGroup}
             <RoomGroupComponent {roomGroup} propertyId={params.propertyId} />
           {/each}

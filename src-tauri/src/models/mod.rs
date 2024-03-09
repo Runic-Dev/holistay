@@ -24,8 +24,17 @@ pub struct RoomGroup {
     pub id: String,
     pub name: String,
     pub image: Option<String>,
-    pub description: String
+    pub description: String,
+    pub rooms: Vec<Room>
 }
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct Room {
+    pub id: String,
+    pub name: String,
+    pub image: Option<String>,
+}
+
 
 #[derive(Serialize, Clone)]
 pub struct RegisteredUser {
@@ -53,6 +62,12 @@ pub struct PropertyPartial {
     pub image: String,
 }
 
+#[derive(Serialize, Deserialize, FromRow)]
+pub struct RoomPartial {
+    pub id: String,
+    pub name: String,
+    pub image: String,
+}
 
 #[derive(Serialize, Deserialize)]
 pub struct PropertyRoomGroup {
@@ -83,7 +98,8 @@ impl FromRow<'_, SqliteRow> for RoomGroup {
             id: row.try_get("id")?,
             name: row.try_get("name")?,
             image: row.try_get("image")?,
-            description: row.try_get("description")?
+            description: row.try_get("description")?,
+            rooms: vec![]
         })
     }
 }

@@ -14,15 +14,6 @@ export type Contact = {
   email: string
 }
 
-
-export type Room = {
-  id: string,
-  number: number,
-  imageUrl: string,
-  name: string,
-  beds: Bed[]
-}
-
 export enum Bed {
   Single,
   Double,
@@ -39,6 +30,15 @@ export type TileConfig = {
 
 export type RoomGroupResponse = {
   id: string,
+  name: string,
+  image: string,
+  description: string,
+  rooms: Room[]
+};
+
+export type RoomResponse = {
+  id: string,
+  room_group_id: string,
   name: string,
   image: string,
   description: string

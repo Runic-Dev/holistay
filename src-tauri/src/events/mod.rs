@@ -4,6 +4,7 @@ mod requests;
 mod room_group_service;
 mod event_handlers;
 mod configuration;
+pub mod room_service;
 
 use tokio::sync::{ mpsc::{Receiver, Sender}, Mutex };
 
@@ -18,7 +19,7 @@ use self::{
         LoginRegisterRequest,
         NewPropertyRequest, 
         NewRoomGroupRequest, 
-        GetRoomGroupsRequest, NewDescriptionRequest
+        GetRoomGroupsRequest, NewDescriptionRequest, NewRoomRequest, GetRoomsRequest
     }, 
     configuration::configure_event_handler
 };
@@ -36,7 +37,9 @@ pub enum HolistayEvent {
     PropertyDataRequested(String),
     GetRoomGroups(GetRoomGroupsRequest),
     NewRoomGroupDescription(NewDescriptionRequest),
-    NewPropertyDescription(NewDescriptionRequest)
+    NewPropertyDescription(NewDescriptionRequest),
+    NewRoom(NewRoomRequest),
+    GetRooms(GetRoomsRequest),
 }
 
 
@@ -52,6 +55,8 @@ pub fn listen_to_frontend(app: &App, tx: Sender<HolistayEvent>) {
     event_handlers::handle_get_property_data(app, tx.clone());
     event_handlers::handle_new_room_group_desc(app, tx.clone());
     event_handlers::handle_new_property_desc(app, tx.clone());
+    event_handlers::handle_add_new_room(app, tx.clone());
+    event_handlers::handle_get_rooms(app, tx.clone());
 }
 
 #[allow(clippy::significant_drop_tightening)]

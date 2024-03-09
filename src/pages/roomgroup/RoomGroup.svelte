@@ -8,8 +8,9 @@
   import { addBase64HtmlSyntax } from "@/utils";
   import { DescribableEntity } from "@/common/types";
   import Description from "@/common/Description.svelte";
-    import { emit } from "@tauri-apps/api/event";
-    import type { TileConfig } from "@/types";
+  import { listen, emit } from "@tauri-apps/api/event";
+  import type { RoomResponse, TileConfig } from "@/types";
+  import Room from "@/models/Room";
 
   export let params: {
     propertyId: string;
@@ -24,7 +25,6 @@
     addingNewRoom = !addingNewRoom;
   }
 
-
   function addNewRoom(event: CustomEvent<TileConfig>) {
     let newRoomRequest = {
       name: event.detail.title,
@@ -36,18 +36,27 @@
     emit("add_new_room", newRoomRequest);
     emit("get_rooms", {
       property_id: params.propertyId,
-      room_group_id: roomGroup.id
+      room_group_id: roomGroup.id,
     });
 
     toggleNewRoom();
   }
 
-  onMount(() => {
-    propertyStore.subscribe(x => {
-      let parentProperty = x.properties
-        .find((p) => p.id == params.propertyId);
-      if(parentProperty.roomGroups){
-        roomGroup = parentProperty.roomGroups?.find((rm) => rm.id == params.roomGroupId);
+  onMount(async () => {
+    await listen<RoomResponse[]>("rooms_loaded", (event) => {
+      propertyStore.update(x => {
+        x.properties.find(p => p.id == params.propertyId).roomGroups.find(rg => rg.id == roomGroup.id).rooms = event.payload.map(y => {
+          return Room.FromResponse(y);
+        });
+        return x;
+      });
+    });
+    propertyStore.subscribe((x) => {
+      let parentProperty = x.properties.find((p) => p.id == params.propertyId);
+      if (parentProperty.roomGroups) {
+        roomGroup = parentProperty.roomGroups?.find(
+          (rm) => rm.id == params.roomGroupId,
+        );
       }
     });
   });
@@ -75,9 +84,7 @@
         description={roomGroup.description ?? "No description"}
       />
       <div class="room-controls">
-        <button on:click={toggleNewRoom} class="add-room">
-          Add Room
-        </button>
+        <button on:click={toggleNewRoom} class="add-room"> Add Room </button>
       </div>
       <div class="room-plan">
         <h4>Rooms</h4>
@@ -98,15 +105,15 @@
             {/each}
           {/if}
           {#if addingNewRoom}
-          <Tile
-            tileConfig={{
-              type: TileType.NewRoom,
-              title: null,
-              image: null,
-              clickAction: null,
-            }}
-            on:confirmedRoom={addNewRoom}
-          />
+            <Tile
+              tileConfig={{
+                type: TileType.NewRoom,
+                title: null,
+                image: null,
+                clickAction: null,
+              }}
+              on:confirmedRoom={addNewRoom}
+            />
           {/if}
         </div>
       </div>

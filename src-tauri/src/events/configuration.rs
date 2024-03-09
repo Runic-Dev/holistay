@@ -7,7 +7,7 @@ use tokio::sync::Mutex;
 
 use crate::models::{RegisteredUser, LoggedInUser};
 
-use super::{HolistayEvent, auth_service::{register_user, login_user, get_default_user}, property_service::{add_new_property, get_property_partials, get_property}, room_group_service::{add_new_room_group, get_room_groups}};
+use super::{HolistayEvent, auth_service::{register_user, login_user, get_default_user}, property_service::{add_new_property, get_property_partials, get_property}, room_group_service::{add_new_room_group, get_room_groups}, room_service::{self, get_room_partials}};
 
 pub async fn configure_event_handler(mut rx: Receiver<HolistayEvent>, mutex_pool: Mutex<Pool<Sqlite>>, app_handle: AppHandle) {
     while let Some(holistay_event) = rx.recv().await {
@@ -121,7 +121,23 @@ pub async fn configure_event_handler(mut rx: Receiver<HolistayEvent>, mutex_pool
                         }));
                     });
             },
+            HolistayEvent::NewRoom(new_room_request) => {
+                let pool_lock = mutex_pool.lock().await;
+                room_service::add_new_room(pool_lock, new_room_request)
+                    .await
+                    .map_or_else(
+                        |err| println!("{}", err.to_string()), 
+                        |result| println!("Successfully entered rows to database: {}", result.rows_affected()))
+
+            },
+            HolistayEvent::GetRooms(get_rooms_request) => {
+                let pool_lock = mutex_pool.lock().await;
+                get_room_partials(pool_lock, get_rooms_request).await
+                    .map_or_else(
+                        |err| println!("Error loading rooms: {:?}", err), 
+                        |room_partials| { let _ = app_handle
+                            .emit_all("rooms_loaded", &room_partials); });
+            },
         }
     }
 }
-
