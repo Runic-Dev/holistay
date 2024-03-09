@@ -1,14 +1,16 @@
 <script lang="ts">
   import MainLayout from "@/MainLayout.svelte";
-  import { onMount } from "svelte";
+  import { getContext, onMount } from "svelte";
   import { propertyStore } from "@/store";
   import { addBase64HtmlSyntax } from "@/utils";
+  import type { BackendHandler } from "@/backendHandlers";
   export let params: {
     roomId: string;
     roomGroupId: string;
     propertyId: string;
   };
   $: room = null;
+  getContext<BackendHandler>("backendHandler").foo();
   onMount(() => {
     propertyStore.subscribe((ps) => {
       room = ps.properties

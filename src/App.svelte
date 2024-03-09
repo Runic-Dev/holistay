@@ -4,7 +4,15 @@
   import RoomGroup from "./pages/roomgroup/RoomGroup.svelte";
   import Router from "svelte-spa-router";
   import Room from "./pages/room/Room.svelte";
+  import { TauriBackendHandler, WebBackendHandler, type BackendHandler } from "./backendHandlers";
+  import { setContext } from "svelte";
 
+  let handler =
+    import.meta.env.VITE_HOLISTAY_PLATFORM == "desktop"
+      ? new TauriBackendHandler()
+      : new WebBackendHandler();
+
+  setContext<BackendHandler>("backendHandler", handler);
   const routes = {
     "/": WelcomeScreen,
     "/property/:propertyId": Property,
