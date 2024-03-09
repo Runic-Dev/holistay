@@ -1,22 +1,31 @@
 <script lang="ts">
-  import type { Room } from "@/types";
   import MainLayout from "@/MainLayout.svelte";
   import { onMount } from "svelte";
   import { propertyStore } from "@/store";
-  export let room: Room;
+  import { addBase64HtmlSyntax } from "@/utils";
   export let params: {
     roomId: string;
     roomGroupId: string;
     propertyId: string;
   };
+  $: room = null;
   onMount(() => {
-    propertyStore.subscribe(ps => 
-      room = ps.properties.find(p => p.id == params.propertyId)
-      .roomGroups.find(rg => rg.id == params.roomGroupId)
-      .rooms.find(r => r.id == params.roomId)
-    );
+    propertyStore.subscribe((ps) => {
+      room = ps.properties
+        .find((p) => p.id == params.propertyId)
+        .roomGroups.find((rg) => rg.id == params.roomGroupId)
+        .rooms.find((r) => r.id == params.roomId);
+    });
   });
 </script>
 
-<MainLayout header={room.name} imageUrl={room.imageUrl}>
-</MainLayout>
+{#if room}
+  <MainLayout
+    header={room?.name ?? "Loading..."}
+    imageUrl={room?.imageUrl
+      ? addBase64HtmlSyntax(room.imageUrl, "jpeg")
+      : null}
+  ></MainLayout>
+{:else}
+  Loading..
+{/if}

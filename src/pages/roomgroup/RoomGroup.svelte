@@ -59,6 +59,10 @@
         );
       }
     });
+    emit("get_rooms", {
+      property_id: params.propertyId,
+      room_group_id: roomGroup.id
+    })
   });
 </script>
 
