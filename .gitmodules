@@ -1,0 +1,3 @@
+[submodule "src/HolistayFrontend"]
+	path = src/HolistayFrontend
+	url = git@github.com:Runic-Dev/holistay_frontend.git
