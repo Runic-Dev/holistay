@@ -3,7 +3,7 @@ use tokio::sync::mpsc::Sender;
 use crate::event_system::events::HolistayEvent;
 use crate::models::requests::{GetRoomsRequest, NewRoomRequest};
 
-pub fn handle_add_new_room(app: &App, tx_clone: Sender<HolistayEvent>) {
+pub fn add_new_room(app: &App, tx_clone: Sender<HolistayEvent>) {
     app.listen_global("add_new_room", move |event| {
         let payload = event.payload().expect("Payload expected");
         let new_room_request: NewRoomRequest =
@@ -16,7 +16,7 @@ pub fn handle_add_new_room(app: &App, tx_clone: Sender<HolistayEvent>) {
     });
 }
 
-pub fn handle_get_rooms(app: &App, tx_clone: Sender<HolistayEvent>) {
+pub fn get_rooms(app: &App, tx_clone: Sender<HolistayEvent>) {
     app.listen_global("get_rooms", move |event| {
         let payload = event.payload().expect("Payload expected");
         let get_rooms_request: GetRoomsRequest =

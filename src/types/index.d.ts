@@ -1,4 +1,5 @@
 import type { IsSaveable } from "src/lib/database"
+import type {Property} from "@/models/Property";
 
 export type Address = {
   street: string,
@@ -26,6 +27,11 @@ export type TileConfig = {
   title: string | null,
   image: string | null,
   clickAction: null | (() => void | Promise<void>)
+}
+
+export type PropertyResponse = {
+  success: boolean,
+  data: Property
 }
 
 export type RoomGroupResponse = {

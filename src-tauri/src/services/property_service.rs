@@ -29,7 +29,7 @@ pub async fn add_new_property(pool_lock: MutexGuard<'_, Pool<Sqlite>>, new_prope
 pub async fn get_property(pool_lock: MutexGuard<'_, Pool<Sqlite>>, property_id: String) -> Result<Option<Property>, sqlx::Error> {
     match sqlx::query_as::<Sqlite, PropertyRoomGroupRoomRow>(
 "
-SELECT p.id as property_id, p.name as property_name, p.image as property_image, 
+SELECT p.id as property_id, p.name as property_name, p.image as property_image, p.description as property_description,
 rg.id as room_group_id, rg.name as room_group_name, rg.image as room_group_image, 
 r.id as room_id, r.name as room_name, r.image as room_image FROM property p LEFT OUTER JOIN room_group rg 
 ON p.id = rg.property_id LEFT OUTER JOIN room r ON rg.id = r.room_group_id WHERE p.id = ?",
@@ -42,6 +42,7 @@ ON p.id = rg.property_id LEFT OUTER JOIN room r ON rg.id = r.room_group_id WHERE
                     let property = Property {
                         id: property_data.property_id.to_string(),
                         name: property_data.property_name.to_string(),
+                        description: property_data.property_description.clone(),
                         image: property_data.property_image.clone(),
                         room_groups: room_groups_from_rows(&property_room_group_rows)
                     };
@@ -68,6 +69,7 @@ pub async fn update_description(pool_lock: MutexGuard<'_, Pool<Sqlite>>, new_pro
 struct PropertyRoomGroupRoomRow {
     pub property_id: String,
     pub property_name: String,
+    pub property_description: Option<String>,
     pub property_image: Option<String>,
     pub room_group_id: Option<String>,
     pub room_group_name: Option<String>,

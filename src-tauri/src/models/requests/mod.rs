@@ -43,3 +43,8 @@ pub struct NewRoomRequest {
 pub struct GetRoomsRequest {
     pub room_group_id: String,
 }
+
+#[derive(Deserialize, Clone)]
+pub struct GetPropertyRequest {
+    pub property_id: String,
+}

@@ -7,6 +7,7 @@ pub struct Property {
     pub id: String,
     pub name: String,
     pub image: Option<String>,
+    pub description: Option<String>,
     pub room_groups: Vec<RoomGroup>
 }
 

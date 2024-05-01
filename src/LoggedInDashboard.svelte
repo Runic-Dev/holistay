@@ -29,7 +29,7 @@
     propertyStore.subscribe((propStore) => {
       properties = propStore.properties;
     });
-    emit("get_properties");
+    await emit("get_properties");
     await listen<Property[]>("properties_loaded", (event) => {
       console.log(event.payload);
       propertyStore.set({

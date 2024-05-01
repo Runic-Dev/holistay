@@ -1,120 +1,142 @@
 <script lang="ts">
-  import type {
-    TileConfig,
-    RoomGroupResponse as RoomGroupsDataEvent,
-  } from "src/types";
-  import { TileType } from "@/enums/ui";
-  import MainLayout from "@/MainLayout.svelte";
-  import RoomGroupComponent from "@/pages/property/RoomGroup.svelte";
-  import { onMount } from "svelte";
-  import Tile from "@/common/Tile.svelte";
-  import RoomGroup from "@/models/RoomGroup";
-  import { addBase64HtmlSyntax } from "@/utils/index";
-  import { propertyStore } from "@/store";
-  import { emit, listen } from "@tauri-apps/api/event";
-  import Description from "@/common/Description.svelte";
-  import { DescribableEntity } from "@/common/types";
+    import type {
+        TileConfig,
+        RoomGroupResponse as RoomGroupsDataEvent, PropertyResponse,
+    } from "src/types";
+    import {TileType} from "@/enums/ui";
+    import MainLayout from "@/MainLayout.svelte";
+    import RoomGroupComponent from "@/pages/property/RoomGroup.svelte";
+    import {onMount} from "svelte";
+    import Tile from "@/common/Tile.svelte";
+    import RoomGroup from "@/models/RoomGroup";
+    import {addBase64HtmlSyntax} from "@/utils/index";
+    import {propertyStore} from "@/store";
+    import {emit, listen} from "@tauri-apps/api/event";
+    import Description from "@/common/Description.svelte";
+    import {DescribableEntity} from "@/common/types";
 
-  export let params: { propertyId: string };
+    export let params: { propertyId: string };
 
-  export let addingNewRoomGroup: boolean = false;
+    export let addingNewRoomGroup: boolean = false;
 
-  $: property = null;
+    $: property = null;
 
-  $: roomGroupSummary = "Loading...";
+    $: roomGroupSummary = "Loading...";
 
-  function toggleNewRoomGroup() {
-    addingNewRoomGroup = !addingNewRoomGroup;
-  }
+    function toggleNewRoomGroup() {
+        addingNewRoomGroup = !addingNewRoomGroup;
+    }
 
-  function addNewRoomGroup(event: CustomEvent<TileConfig>) {
-    let newRoomGroupRequest = {
-      name: event.detail.title,
-      property_id: property.id,
-      image: event.detail.image,
-    };
+    function addNewRoomGroup(event: CustomEvent<TileConfig>) {
+        let newRoomGroupRequest = {
+            name: event.detail.title,
+            property_id: property.id,
+            image: event.detail.image,
+        };
 
-    emit("add_new_room_group", newRoomGroupRequest);
-    emit("get_room_groups", {
-      property_id: property.id,
-    });
+        emit("add_new_room_group", newRoomGroupRequest);
+        emit("get_room_groups", {
+            property_id: property.id,
+        });
 
-    toggleNewRoomGroup();
-  }
+        toggleNewRoomGroup();
+    }
 
-  onMount(async () => {
-    propertyStore.subscribe((x) => {
-      property = x.properties.find((p) => p.id == params.propertyId);
-      if (property.roomGroups) {
-        roomGroupSummary = `${property.name} has ${property.roomGroups.length} room groups`;
-      } else {
-        roomGroupSummary = `${property.name} has 0 room groups`;
-      }
-      property = { ...property };
-    });
-    await listen<RoomGroupsDataEvent[]>("room_groups_data", (event) => {
-      propertyStore.update((x) => {
-        x.properties.find((prop) => prop.id == params.propertyId).roomGroups =
-          event.payload.map((y) => {
-            return RoomGroup.FromRoomGroupResponse(y);
-          });
-        return x;
+    onMount(async () => {
+        propertyStore.subscribe((x) => {
+            property = x.properties.find((p) => p.id == params.propertyId);
+            if (property.roomGroups) {
+                roomGroupSummary = `${property.name} has ${property.roomGroups.length} room groups`;
+            } else {
+                roomGroupSummary = `${property.name} has 0 room groups`;
+            }
+            property = {...property};
+        });
+        await listen<RoomGroupsDataEvent[]>("room_groups_data", (event) => {
+            propertyStore.update((x) => {
+                x.properties.find((prop) => prop.id == params.propertyId).roomGroups =
+                    event.payload.map((y) => {
+                        return RoomGroup.FromRoomGroupResponse(y);
+                    });
+                return x;
+            });
+        });
+        await listen<RoomGroupsDataEvent[]>("room_groups_data", (event) => {
+            propertyStore.update((x) => {
+                x.properties.find((prop) => prop.id == params.propertyId).roomGroups =
+                    event.payload.map((y) => {
+                        return RoomGroup.FromRoomGroupResponse(y);
+                    });
+                return x;
+            });
+        });
+        await listen<PropertyResponse>("property_data", (event) => {
+            propertyStore.update((x) => {
+                x.properties.find((prop) => prop.id == params.propertyId).description
+                        = event.payload.data.description;
+                return x;
+            });
+        });
+      await emit("get_property_data", {
+        property_id: params.propertyId,
       });
+        await emit("get_room_groups", {
+            property_id: params.propertyId,
+        });
     });
-    await emit("get_room_groups", {
-      property_id: params.propertyId,
-    });
-  });
 </script>
 
 {#if property}
-  <MainLayout
-    header={property.name}
-    imageUrl={addBase64HtmlSyntax(property.image, "jpeg")}
-  >
-    <div class="manage-property">
-      <div class="room-groups-controls">
-        <h4 class="room-group-summary">{roomGroupSummary}</h4>
-        <button on:click={toggleNewRoomGroup} class="add-room-group">
-          Add RoomGroup
-        </button>
-      </div>
-      <Description
-        type={DescribableEntity.Property}
-        id={property.id}
-        description={property.description ?? "No description"}
-      />
-      <div class="room-groups content-container">
-        {#if property.roomGroups}
-          {#each property.roomGroups as roomGroup}
-            <RoomGroupComponent {roomGroup} propertyId={params.propertyId} />
-          {/each}
-        {/if}
-        {#if addingNewRoomGroup}
-          <Tile
-            tileConfig={{
+    <MainLayout
+            header={property.name}
+            imageUrl={addBase64HtmlSyntax(property.image, "jpeg")}
+    >
+        <div class="manage-property">
+            <div class="room-groups-controls">
+                <h4 class="room-group-summary">{roomGroupSummary}</h4>
+                <button on:click={toggleNewRoomGroup} class="add-room-group">
+                    Add RoomGroup
+                </button>
+            </div>
+            <Description
+                    type={DescribableEntity.Property}
+                    id={property.id}
+                    description={property.description ?? "No description"}
+            />
+            <div class="room-groups content-container">
+                {#if property.roomGroups}
+                    {#each property.roomGroups as roomGroup}
+                        <RoomGroupComponent {roomGroup} propertyId={params.propertyId}/>
+                    {/each}
+                {/if}
+                {#if addingNewRoomGroup}
+                    <Tile
+                            tileConfig={{
               type: TileType.NewRoomGroup,
               title: null,
               image: null,
               clickAction: null,
             }}
-            on:confirmedRoomGroup={addNewRoomGroup}
-          />
-        {/if}
-      </div>
-    </div>
-  </MainLayout>
+                            on:confirmedRoomGroup={addNewRoomGroup}
+                    />
+                {/if}
+            </div>
+        </div>
+    </MainLayout>
 {/if}
 
 <style lang="scss">
   @import "./src/lib/app.scss";
+
   .manage-property {
     .room-groups-controls {
       h4 {
         margin: $padding 0;
       }
+
       margin: $padding * 2;
     }
+
     .room-groups {
       text-align: left;
       display: flex;

@@ -18,12 +18,14 @@
           id,
           description: tempDescription,
         });
+        break;
       }
       case DescribableEntity.RoomGroup: {
         emit("new_room_group_description", {
           id,
           description: tempDescription,
         });
+        break;
       }
       default: {
         console.error("Entity not describable");
@@ -39,6 +41,7 @@
           let newProperties = ps.properties;
           newProperties.find((p) => p.id == id).description =
             event.payload.description;
+          description = event.payload.description;
           return { properties: newProperties };
         });
       });
@@ -51,6 +54,7 @@
           newProperties.find(p => p.roomGroups.some(rg => rg.id == id))
           .roomGroups.find(rg => rg.id == id)
           .description = event.payload.description;
+          description = event.payload.description;
           return { properties: newProperties };
         });
       });

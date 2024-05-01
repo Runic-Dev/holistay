@@ -3,7 +3,7 @@ use tokio::sync::mpsc::Sender;
 use crate::event_system::events::HolistayEvent;
 use crate::models::requests::LoginRegisterRequest;
 
-pub fn handle_login_attempt(app: &App, tx_clone: Sender<HolistayEvent>) {
+pub fn login_attempt(app: &App, tx_clone: Sender<HolistayEvent>) {
     app.listen_global("login_attempt", move |event| {
         let payload = event.payload().expect("Argh there's no bladdy payload");
         let login_attempt: LoginRegisterRequest =
@@ -16,7 +16,7 @@ pub fn handle_login_attempt(app: &App, tx_clone: Sender<HolistayEvent>) {
     });
 }
 
-pub fn handle_register_attempt(app: &App, tx_clone: Sender<HolistayEvent>) {
+pub fn register_attempt(app: &App, tx_clone: Sender<HolistayEvent>) {
     app.listen_global("register_attempt", move |event| {
         let payload = event.payload().expect("Payload expected");
         let register_attempt: LoginRegisterRequest =

@@ -6,6 +6,7 @@ use tauri::{AppHandle, Manager};
 use tokio::sync::Mutex;
 use crate::event_system::events::HolistayEvent;
 use crate::models::auth::{LoggedInUser, RegisteredUser};
+use crate::models::domain::property::Property;
 
 use crate::services::{auth_service, property_service, room_group_service, room_service};
 
@@ -61,18 +62,24 @@ pub async fn configure_event_handler(mut rx: Receiver<HolistayEvent>, mutex_pool
                         |property_partials| { let _ = app_handle
                             .emit_all("properties_loaded", &property_partials); });
             },
-            HolistayEvent::PropertyDataRequested(property_id) => {
+            HolistayEvent::PropertyDataRequested(get_property_request) => {
                 let pool_lock = mutex_pool.lock().await;
-                property_service::get_property(pool_lock, property_id).await
+                property_service::get_property(pool_lock, get_property_request.property_id).await
                     .map_or_else(
                         |err| println!("Error loading property: {err:?}"), 
                         |property| {
-                            let _ = app_handle.emit_all("property_data", json!({
-                                "success": true,
-                                "property": &property
-                            }));
+                            let payload = match property {
+                                Some(ref checked_property) => {
+                                    json!({
+                                        "success": true,
+                                        "data": checked_property
+                                    })
+                                }
+                                None => json!({ "success": false })
+                            };
+                            let _ = app_handle.emit_all("property_data", payload);
                     });
-            },
+            }
             HolistayEvent::NewRoomGroup(new_room_group_request) => {
                 let pool_lock = mutex_pool.lock().await;
                 room_group_service::add_new_room_group(pool_lock, new_room_group_request)
