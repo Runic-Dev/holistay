@@ -4,10 +4,8 @@ use base64::{engine::general_purpose, Engine};
 use sqlx::{Sqlite, Pool};
 use tokio::sync::MutexGuard;
 use uuid::Uuid;
-
-use crate::models::RoomPartial;
-
-use super::requests::{NewRoomRequest, GetRoomsRequest};
+use crate::models::domain::room::RoomPartial;
+use crate::models::requests::{GetRoomsRequest, NewRoomRequest};
 
 pub async fn add_new_room(pool_lock: MutexGuard<'_, Pool<Sqlite>>, new_room_request: NewRoomRequest) -> Result<sqlx::sqlite::SqliteQueryResult, sqlx::Error> {
     let id = Uuid::new_v4();

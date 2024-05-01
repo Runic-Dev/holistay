@@ -3,16 +3,16 @@
 #![warn(clippy::pedantic)]
 #![warn(clippy::nursery)]
 
-use events::{HolistayEvent, listen_to_frontend, init_event_handler};
 use tauri::Manager;
+use crate::event_system::events::{HolistayEvent, init_event_handler, listen_to_frontend};
 
-pub mod events;
+pub mod event_system;
 mod models;
-pub mod responses;
 
 mod db;
 pub mod utils;
 pub mod errors;
+pub mod services;
 
 #[tokio::main]
 async fn main() {

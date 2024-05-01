@@ -1,10 +1,9 @@
 use sqlx::{Pool, Sqlite, prelude::FromRow, sqlite::SqliteRow, Row};
 use uuid::Uuid;
 use tokio::sync::MutexGuard;
+use crate::models::requests::LoginRegisterRequest;
 
 use crate::models::user::{User, UserRow};
-
-use super::requests::LoginRegisterRequest;
 
 pub async fn register_user(
     conn_pool: MutexGuard<'_, Pool<Sqlite>>,
@@ -61,7 +60,7 @@ pub async fn login_user(conn_pool: MutexGuard<'_, Pool<Sqlite>>, login_attempt: 
     tran.commit().await.map_or_else(|err| Err(err), |_| Ok(user))
 }
 
-pub async fn get_default_user(conn_pool: MutexGuard<'_, Pool<Sqlite>>) -> Result<Option<UserRow>, Box::<dyn std::error::Error>> {
+pub async fn get_default_user(conn_pool: MutexGuard<'_, Pool<Sqlite>>) -> Result<Option<UserRow>, Box<dyn std::error::Error>> {
 
     let default_user_setting = sqlx::query_as::<Sqlite, DefaultUserSetting>("SELECT value FROM settings WHERE setting = 'default_user'")
         .fetch_one(&*conn_pool).await?;

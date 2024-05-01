@@ -7,8 +7,7 @@ use serde_json::Value;
 use sqlx::{prelude::FromRow, sqlite::SqliteRow};
 use sqlx::{Error, Row};
 use uuid::Uuid;
-
-use crate::responses::{HasHolistayResponse, HolistayResponse};
+use crate::models::responses::{HasHolistayResponse, HolistayResponse};
 
 #[derive(Clone, Debug)]
 pub struct User {
@@ -68,7 +67,7 @@ impl<'de> Visitor<'de> for UserVisitor {
 
     fn visit_map<A>(self, mut map: A) -> Result<User, A::Error>
     where
-        A: serde::de::MapAccess<'de>,
+        A: de::MapAccess<'de>,
     {
         let mut id = None;
         let mut username = None;
@@ -113,7 +112,7 @@ impl<'de> Deserialize<'de> for User {
 }
 
 impl HasHolistayResponse<User> for Option<User> {
-    fn to_response(self, value: Value) -> crate::responses::HolistayResponse<User> {
+    fn to_response(self, value: Value) -> HolistayResponse<User> {
         HolistayResponse::new(value, self)
     }
 }

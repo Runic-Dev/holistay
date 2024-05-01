@@ -1,13 +1,14 @@
 use std::{fs, collections::HashSet};
 
-use base64::{engine::general_purpose, Engine};
 use tokio::sync::MutexGuard;
+use base64::{engine::general_purpose, Engine};
 use sqlx::{Sqlite, Pool, prelude::FromRow};
 use uuid::Uuid;
+use crate::models::domain::property::{Property, PropertyPartial};
+use crate::models::domain::room::Room;
+use crate::models::domain::room_group::RoomGroup;
+use crate::models::requests::{NewDescriptionRequest, NewPropertyRequest};
 
-use crate::models::{PropertyPartial, Property, RoomGroup, Room};
-
-use super::{NewPropertyRequest, requests::NewDescriptionRequest};
 
 pub async fn get_property_partials(pool_lock: MutexGuard<'_, Pool<Sqlite>>) -> Result<Vec<PropertyPartial>, sqlx::Error> {
     sqlx::query_as::<Sqlite, PropertyPartial>("SELECT id, name, image FROM property")
