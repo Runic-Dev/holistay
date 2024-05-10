@@ -8,12 +8,11 @@ use crate::services::responses::property_service_responses::{
     AddNewPropertyResponse, GetPropertiesResponse, GetPropertyPartialsResponse,
 };
 use base64::{engine::general_purpose, Engine};
-use sqlx::sqlite::SqliteQueryResult;
 use sqlx::{Error, Pool, Sqlite};
 use tokio::sync::{Mutex, MutexGuard};
 use uuid::Uuid;
 
-pub trait IsPropertyService {
+pub trait IsPropertyService: Send + Sync {
     fn get_property(
         &self,
         property_id: String,
@@ -26,11 +25,11 @@ pub trait IsPropertyService {
 }
 
 pub struct PropertyService {
-    property_repository: Arc<Mutex<PropertyRepository>>,
+    property_repository: Arc<Mutex<dyn IsPropertyRepository>>,
 }
 
 impl PropertyService {
-    pub fn new(property_repository: Arc<Mutex<PropertyRepository>>) -> Mutex<Self> {
+    pub fn new(property_repository: Arc<Mutex<impl IsPropertyRepository + 'static>>) -> Mutex<Self> {
         Mutex::from(PropertyService {
             property_repository,
         })
