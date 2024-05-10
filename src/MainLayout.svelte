@@ -2,7 +2,6 @@
   import { push } from "svelte-spa-router";
   import { userStore } from "./store";
   export let header: string | null = null;
-  console.log(header);
   export let imageUrl: string | null = null;
   $: username = $userStore.user ? $userStore.user["name"] : null;
 </script>

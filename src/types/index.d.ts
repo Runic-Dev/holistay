@@ -1,4 +1,3 @@
-import type { IsSaveable } from "src/lib/database"
 import type {Property} from "@/models/Property";
 
 export type Address = {
@@ -49,4 +48,9 @@ export type RoomResponse = {
   image: string,
   description: string
 };
+
+export type ConfirmedPropertyToSend = {
+  name: string;
+  image: string;
+}
 

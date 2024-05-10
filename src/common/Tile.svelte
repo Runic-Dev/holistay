@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { TileConfig } from "src/types";
+  import type {ConfirmedPropertyToSend, TileConfig} from "src/types";
   import { TileType } from "@/enums/ui";
   import { onMount, createEventDispatcher } from "svelte";
   import { dialog } from "@tauri-apps/api";
@@ -9,7 +9,7 @@
   let newRoomName: string = "";
   let newRoomGroupName: string = "";
   let newPropertyName: string = "";
-  let tileImageFilePath: string | null;
+  let tileImageFilePath: string | null = "";
   let loadedImage: string | null = null;
 
   const dispatch = createEventDispatcher();
@@ -43,7 +43,7 @@
     dispatch("confirmedProperty", {
       name: newPropertyName,
       image: tileImageFilePath,
-    });
+    } as ConfirmedPropertyToSend);
   }
 
   onMount(() => {

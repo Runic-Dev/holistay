@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use tokio::sync::mpsc::Receiver;
 
 use serde_json::json;
@@ -10,7 +11,7 @@ use crate::models::domain::property::Property;
 
 use crate::services::{auth_service, property_service, room_group_service, room_service};
 
-pub async fn configure_event_handler(mut rx: Receiver<HolistayEvent>, mutex_pool: Mutex<Pool<Sqlite>>, app_handle: AppHandle) {
+pub async fn configure_event_handler(mut rx: Receiver<HolistayEvent>, mutex_pool: Arc<Mutex<Pool<Sqlite>>>, app_handle: AppHandle) {
     while let Some(holistay_event) = rx.recv().await {
         match holistay_event {
             HolistayEvent::UpdateLoggedInUser(_) => todo!(),
@@ -54,7 +55,7 @@ pub async fn configure_event_handler(mut rx: Receiver<HolistayEvent>, mutex_pool
                         |err| println!("{}", err.to_string()), 
                         |result| println!("Successfully entered rows to database: {}", result.rows_affected()))
             },
-            HolistayEvent::GetProperties => {
+/*            HolistayEvent::GetProperties => {
                 let pool_lock = mutex_pool.lock().await;
                 property_service::get_property_partials(pool_lock).await
                     .map_or_else(
@@ -80,21 +81,13 @@ pub async fn configure_event_handler(mut rx: Receiver<HolistayEvent>, mutex_pool
                             let _ = app_handle.emit_all("property_data", payload);
                     });
             }
-            HolistayEvent::NewRoomGroup(new_room_group_request) => {
+*/            HolistayEvent::NewRoomGroup(new_room_group_request) => {
                 let pool_lock = mutex_pool.lock().await;
                 room_group_service::add_new_room_group(pool_lock, new_room_group_request)
                     .await
                     .map_or_else(
                         |err| println!("{}", err.to_string()), 
                         |result| println!("Successfully entered rows to database: {}", result.rows_affected()))
-            },
-            HolistayEvent::GetRoomGroups(get_room_groups_request) => {
-                let pool_lock = mutex_pool.lock().await;
-                room_group_service::get_room_groups(pool_lock, get_room_groups_request)
-                    .await
-                    .map_or_else(|err| println!("Error loading room groups: {err:?}"), |room_groups| {
-                        let _ = app_handle.emit_all("room_groups_data", &room_groups);
-                    });
             },
             HolistayEvent::Init => {
                 let pool_lock = mutex_pool.lock().await;
@@ -137,14 +130,7 @@ pub async fn configure_event_handler(mut rx: Receiver<HolistayEvent>, mutex_pool
                         |result| println!("Successfully entered rows to database: {}", result.rows_affected()))
 
             },
-            HolistayEvent::GetRooms(get_rooms_request) => {
-                let pool_lock = mutex_pool.lock().await;
-                room_service::get_room_partials(pool_lock, get_rooms_request).await
-                    .map_or_else(
-                        |err| println!("Error loading rooms: {:?}", err), 
-                        |room_partials| { let _ = app_handle
-                            .emit_all("rooms_loaded", &room_partials); });
-            },
+            _ => {}
         }
     }
 }

@@ -15,3 +15,10 @@ pub struct RoomPartial {
     pub image: String,
 }
 
+impl PartialEq for Room {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+
+impl Eq for Room {}

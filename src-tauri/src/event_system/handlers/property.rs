@@ -1,7 +1,7 @@
-use tauri::{App, Manager};
+use tauri::{App, command, Manager};
 use tokio::sync::mpsc::Sender;
 use crate::event_system::events::HolistayEvent;
-use crate::models::requests::{GetPropertyRequest, NewDescriptionRequest, NewPropertyRequest};
+use crate::models::requests::{GetPropertyRequest, NewDescriptionRequest, AddNewPropertyRequest};
 
 pub fn get_property_data(app: &App, tx: Sender<HolistayEvent>) {
     app.listen_global("get_property_data", move |event| {
@@ -21,19 +21,10 @@ pub fn get_property_data(app: &App, tx: Sender<HolistayEvent>) {
     });
 }
 
-pub fn get_properties(app: &App, tx_clone: Sender<HolistayEvent>) {
-    app.listen_global("get_properties", move |_event| {
-        let tx_clone = tx_clone.clone();
-        tauri::async_runtime::spawn(async move {
-            let _ = tx_clone.send(HolistayEvent::GetProperties).await;
-        });
-    });
-}
-
 pub fn add_new_property(app: &App, tx_clone: Sender<HolistayEvent>) {
     app.listen_global("add_new_property", move |event| {
         let payload = event.payload().expect("No payload found for new property request");
-        let new_property_request: NewPropertyRequest = serde_json::from_str(payload).expect("Couldn't parse NewPropertyRequest from payload");
+        let new_property_request: AddNewPropertyRequest = serde_json::from_str(payload).expect("Couldn't parse NewPropertyRequest from payload");
         let new_property_event = HolistayEvent::NewProperty(new_property_request);
         let tx_clone = tx_clone.clone();
         tauri::async_runtime::spawn(async move {

@@ -24,3 +24,10 @@ impl FromRow<'_, SqliteRow> for RoomGroup {
     }
 }
 
+impl Eq for RoomGroup {}
+impl PartialEq for RoomGroup {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+

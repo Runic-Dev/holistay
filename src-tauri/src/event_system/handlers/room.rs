@@ -16,7 +16,7 @@ pub fn add_new_room(app: &App, tx_clone: Sender<HolistayEvent>) {
     });
 }
 
-pub fn get_rooms(app: &App, tx_clone: Sender<HolistayEvent>) {
+/*pub fn get_rooms(app: &App, tx_clone: Sender<HolistayEvent>) {
     app.listen_global("get_rooms", move |event| {
         let payload = event.payload().expect("Payload expected");
         let get_rooms_request: GetRoomsRequest =
@@ -28,3 +28,4 @@ pub fn get_rooms(app: &App, tx_clone: Sender<HolistayEvent>) {
         });
     });
 }
+*/

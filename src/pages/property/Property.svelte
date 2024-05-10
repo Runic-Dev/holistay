@@ -14,6 +14,8 @@
     import {emit, listen} from "@tauri-apps/api/event";
     import Description from "@/common/Description.svelte";
     import {DescribableEntity} from "@/common/types";
+    import {invoke} from "@tauri-apps/api/tauri";
+    import type {Property} from "@/models/Property";
 
     export let params: { propertyId: string };
 
@@ -52,37 +54,18 @@
             }
             property = {...property};
         });
-        await listen<RoomGroupsDataEvent[]>("room_groups_data", (event) => {
+        await invoke("get_property", {
+            request: {"property_id": params.propertyId}
+        }).then((response: Property) => {
             propertyStore.update((x) => {
-                x.properties.find((prop) => prop.id == params.propertyId).roomGroups =
-                    event.payload.map((y) => {
-                        return RoomGroup.FromRoomGroupResponse(y);
-                    });
+                let propertyIndex = x.properties.findIndex(prop => prop.id == params.propertyId);
+                let property = x.properties.at(propertyIndex);
+                property.description = response.description;
+                property.roomGroups = response.roomGroups;
+                x.properties[propertyIndex] = property;
                 return x;
             });
-        });
-        await listen<RoomGroupsDataEvent[]>("room_groups_data", (event) => {
-            propertyStore.update((x) => {
-                x.properties.find((prop) => prop.id == params.propertyId).roomGroups =
-                    event.payload.map((y) => {
-                        return RoomGroup.FromRoomGroupResponse(y);
-                    });
-                return x;
-            });
-        });
-        await listen<PropertyResponse>("property_data", (event) => {
-            propertyStore.update((x) => {
-                x.properties.find((prop) => prop.id == params.propertyId).description
-                        = event.payload.data.description;
-                return x;
-            });
-        });
-      await emit("get_property_data", {
-        property_id: params.propertyId,
-      });
-        await emit("get_room_groups", {
-            property_id: params.propertyId,
-        });
+        }).catch(err => console.error(err));
     });
 </script>
 
@@ -126,7 +109,7 @@
 {/if}
 
 <style lang="scss">
-  @import "./src/lib/app.scss";
+  @import 'src/lib/app.scss';
 
   .manage-property {
     .room-groups-controls {

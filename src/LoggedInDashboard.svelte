@@ -2,18 +2,21 @@
   import { onMount } from "svelte";
   import Tile from "./common/Tile.svelte";
   import { TileType } from "./enums/ui";
-  import { emit, listen } from "@tauri-apps/api/event";
-  import type { TileConfig } from "./types";
+  import { emit } from "@tauri-apps/api/event";
+  import type {ConfirmedPropertyToSend, TileConfig} from "./types";
   import { push } from "svelte-spa-router";
-  import type { Property } from "./models/Property";
+  import { Property } from "./models/Property";
   import { propertyStore } from "./store";
+  import {invoke} from "@tauri-apps/api/tauri";
+  import type {PropertyPartial} from "@/models/PropertyPartial";
 
   $: properties = [];
   let addingNewProperty = false;
 
-  function addNewProperty(payload: any) {
-    emit("add_new_property", payload.detail);
-    emit("get_properties");
+  function addNewProperty(payload: { detail: ConfirmedPropertyToSend }) {
+    invoke("add_new_property", { request: payload.detail }).then((propertyId: string) => {
+      properties.push(new Property(propertyId, payload.detail.name, payload.detail.image));
+    }).catch((err: string) => console.error(err));
   }
 
   function propertyToTileConfig(property: Property) {
@@ -26,16 +29,12 @@
   }
 
   onMount(async () => {
-    propertyStore.subscribe((propStore) => {
-      properties = propStore.properties;
-    });
-    await emit("get_properties");
-    await listen<Property[]>("properties_loaded", (event) => {
-      console.log(event.payload);
+    await invoke("get_property_partials").then((property_partials: PropertyPartial[]) => {
+      propertyStore.subscribe(ps => properties = ps.properties);
       propertyStore.set({
-        properties: event.payload,
+        properties: property_partials.map(pp => new Property(pp.id, pp.name, "", pp.image)),
       });
-    });
+    }).catch((err: string) => console.log(err))
   });
 </script>
 

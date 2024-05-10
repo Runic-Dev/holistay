@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
-pub struct NewPropertyRequest {
+pub struct AddNewPropertyRequest {
     pub name: String,
     pub image: String
 }

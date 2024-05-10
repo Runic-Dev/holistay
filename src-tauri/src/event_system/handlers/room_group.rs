@@ -2,7 +2,7 @@ use tauri::{App, Manager};
 use tokio::sync::mpsc::Sender;
 use crate::event_system::events::HolistayEvent;
 use crate::models::requests::{GetRoomGroupsRequest, NewDescriptionRequest, NewRoomGroupRequest};
-
+/*
 pub fn get_room_groups(app: &App, tx_clone: Sender<HolistayEvent>) {
     app.listen_global("get_room_groups", move |event| {
         let payload = event.payload().expect("No payload found for get room groups request");
@@ -13,7 +13,7 @@ pub fn get_room_groups(app: &App, tx_clone: Sender<HolistayEvent>) {
         });
     });
 }
-
+*/
 
 pub fn add_new_room_group(app: &App, tx_clone: Sender<HolistayEvent>) {
     app.listen_global("add_new_room_group", move |event| {
