@@ -10,7 +10,7 @@
   let newRoomGroupName: string = "";
   let newPropertyName: string = "";
   let tileImageFilePath: string | null = "";
-  let loadedImage: string | null = null;
+  $: loadedImage = null;
 
   const dispatch = createEventDispatcher();
 
@@ -38,12 +38,12 @@
   }
 
   function confirmNewProperty() {
-    tileConfig.type = TileType.Default;
-    tileConfig.title = newPropertyName;
     dispatch("confirmedProperty", {
       name: newPropertyName,
       image: tileImageFilePath,
     } as ConfirmedPropertyToSend);
+    newPropertyName = "";
+    tileImageFilePath = null;
   }
 
   onMount(() => {
@@ -52,7 +52,9 @@
       return;
     }
     onClickFunc = tileConfig.clickAction;
+    console.log("Setting tile config for " + tileConfig.title);
     if(tileConfig.image) {
+      console.log("Creating loadedImage background image for " + tileConfig.title);
       loadedImage = getPropertyBackgroundImg();
     }
   });
@@ -64,13 +66,12 @@
     if (Array.isArray(filePath)) {
       console.error("Only select one");
     } else {
-      console.log(filePath);
       tileImageFilePath = filePath;
     }
   }
 </script>
 
-{#if tileConfig.type == TileType.Default}
+{#if tileConfig.type === TileType.Default}
   {#if loadedImage}
   <div
     on:keydown={() => tileConfig.clickAction()}
@@ -91,7 +92,7 @@
     <div class="overlay" />
   </div>
   {/if}
-{:else if tileConfig.type == TileType.NewRoom}
+{:else if tileConfig.type === TileType.NewRoom}
   <div class="tile newRoom">
     <label for="roomName">Room name:</label>
     <input bind:value={newRoomName} id="roomName" type="text" />
@@ -99,7 +100,7 @@
     <button on:click={selectImage}>Select Image</button>
     <div class="overlay" />
   </div>
-{:else if tileConfig.type == TileType.NewRoomGroup}
+{:else if tileConfig.type === TileType.NewRoomGroup}
   <div class="tile newRoomGroup">
     <label for="roomGroupName">RoomGroup name:</label>
     <input bind:value={newRoomGroupName} id="roomGroupName" type="text" />
@@ -107,7 +108,7 @@
     <button on:click={selectImage}>Select Image</button>
     <div class="overlay" />
   </div>
-{:else if tileConfig.type == TileType.NewProperty}
+{:else if tileConfig.type === TileType.NewProperty}
   <div class="tile newProperty">
     <label for="propertyName">Property name:</label>
     <input bind:value={newPropertyName} id="propertyName" type="text" />
