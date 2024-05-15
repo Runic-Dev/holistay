@@ -11,12 +11,12 @@ use tokio::sync::MutexGuard;
 use uuid::Uuid;
 
 pub trait IsPropertyService {
-    async fn get_property(&self, property_id: String) -> GetPropertiesResponse;
-    async fn get_property_partials(&self) -> GetPropertyPartialsResponse;
-    async fn add_new_property(
+    fn get_property(&self, property_id: String) -> impl std::future::Future<Output = GetPropertiesResponse> + Send;
+    fn get_property_partials(&self) -> impl std::future::Future<Output = GetPropertyPartialsResponse> + Send;
+    fn add_new_property(
         &self,
         new_property_request: AddNewPropertyRequest,
-    ) -> AddNewPropertyResponse;
+    ) -> impl std::future::Future<Output = AddNewPropertyResponse> + Send;
 }
 
 pub struct PropertyService<T: IsPropertyRepository> {
@@ -31,7 +31,7 @@ impl<T: IsPropertyRepository> PropertyService<T> {
     }
 }
 
-impl<T: IsPropertyRepository> IsPropertyService for PropertyService<T> {
+impl<T: IsPropertyRepository + std::marker::Sync> IsPropertyService for PropertyService<T> {
     async fn get_property(&self, property_id: String) -> GetPropertiesResponse {
         match self.property_repository.get_property(property_id).await {
             Ok(property_option) => match property_option {

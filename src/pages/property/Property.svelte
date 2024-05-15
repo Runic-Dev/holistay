@@ -1,22 +1,19 @@
 <script lang="ts">
   import type {
     TileConfig,
-    RoomGroupResponse as RoomGroupsDataEvent,
-    PropertyResponse,
   } from "src/types";
   import { TileType } from "@/enums/ui";
   import MainLayout from "@/MainLayout.svelte";
   import RoomGroupComponent from "@/pages/property/RoomGroup.svelte";
   import { onMount } from "svelte";
   import Tile from "@/common/Tile.svelte";
-  import RoomGroup from "@/models/RoomGroup";
   import { addBase64HtmlSyntax } from "@/utils/index";
   import { propertyStore } from "@/store";
-  import { emit, listen } from "@tauri-apps/api/event";
-  import Description from "@/common/Description.svelte";
+  import { emit } from "@tauri-apps/api/event";
   import { DescribableEntity } from "@/common/types";
   import { invoke } from "@tauri-apps/api/tauri";
   import type { Property } from "@/models/Property";
+    import Description from "@/common/Description.svelte";
 
   export let params: { propertyId: string };
 
