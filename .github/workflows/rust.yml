@@ -31,8 +31,5 @@ jobs:
            libappindicator3-dev \
            librsvg2-dev
 
-      - name: Install dependencies
-        run: cd src-tauri && cargo check --verbose
-
       - name: Run tests
         run: cd src-tauri && cargo test --verbose
