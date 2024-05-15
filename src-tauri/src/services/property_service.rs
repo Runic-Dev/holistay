@@ -1,45 +1,39 @@
 use std::fs;
-use std::future::Future;
-use std::sync::Arc;
 
 use crate::models::requests::{AddNewPropertyRequest, NewDescriptionRequest};
-use crate::repositories::property_repository::{IsPropertyRepository, PropertyRepository};
+use crate::repositories::property_repository::IsPropertyRepository;
 use crate::services::responses::property_service_responses::{
     AddNewPropertyResponse, GetPropertiesResponse, GetPropertyPartialsResponse,
 };
 use base64::{engine::general_purpose, Engine};
-use sqlx::{Error, Pool, Sqlite};
-use tokio::sync::{Mutex, MutexGuard};
+use sqlx::{Pool, Sqlite};
+use tokio::sync::MutexGuard;
 use uuid::Uuid;
 
-pub trait IsPropertyService: Send + Sync {
-    fn get_property(
-        &self,
-        property_id: String,
-    ) -> impl Future<Output = GetPropertiesResponse> + Send;
-    fn get_property_partials(&self) -> impl Future<Output = GetPropertyPartialsResponse> + Send;
-    fn add_new_property(
+pub trait IsPropertyService {
+    async fn get_property(&self, property_id: String) -> GetPropertiesResponse;
+    async fn get_property_partials(&self) -> GetPropertyPartialsResponse;
+    async fn add_new_property(
         &self,
         new_property_request: AddNewPropertyRequest,
-    ) -> impl Future<Output = AddNewPropertyResponse> + Send;
+    ) -> AddNewPropertyResponse;
 }
 
-pub struct PropertyService {
-    property_repository: Arc<Mutex<dyn IsPropertyRepository>>,
+pub struct PropertyService<T: IsPropertyRepository> {
+    property_repository: T,
 }
 
-impl PropertyService {
-    pub fn new(property_repository: Arc<Mutex<impl IsPropertyRepository + 'static>>) -> Mutex<Self> {
-        Mutex::from(PropertyService {
+impl<T: IsPropertyRepository> PropertyService<T> {
+    pub fn new(property_repository: T) -> PropertyService<T> {
+        Self {
             property_repository,
-        })
+        }
     }
 }
 
-impl IsPropertyService for PropertyService {
+impl<T: IsPropertyRepository> IsPropertyService for PropertyService<T> {
     async fn get_property(&self, property_id: String) -> GetPropertiesResponse {
-        let repo_lock = self.property_repository.lock().await;
-        match repo_lock.get_property(property_id).await {
+        match self.property_repository.get_property(property_id).await {
             Ok(property_option) => match property_option {
                 Some(property) => GetPropertiesResponse::Successful { property },
                 None => GetPropertiesResponse::Unsuccessful {
@@ -56,8 +50,7 @@ impl IsPropertyService for PropertyService {
     }
 
     async fn get_property_partials(&self) -> GetPropertyPartialsResponse {
-        let repo_lock = self.property_repository.lock().await;
-        match repo_lock.get_property_partials().await {
+        match self.property_repository.get_property_partials().await {
             Ok(property_partials) => GetPropertyPartialsResponse::Successful { property_partials },
             Err(_) => GetPropertyPartialsResponse::Unsuccessful {
                 error_message: String::from("Error communicating with database"),
@@ -69,15 +62,18 @@ impl IsPropertyService for PropertyService {
         &self,
         new_property_request: AddNewPropertyRequest,
     ) -> AddNewPropertyResponse {
-        let repo_lock = self.property_repository.lock().await;
-        match repo_lock.add_new_property(new_property_request).await {
-            Ok(property_id) => AddNewPropertyResponse::Successful { property_id },
-            Err(err) => {
-                println!("Unsuccessful!");
-                AddNewPropertyResponse::Unsuccessful {
-                    error_message: err.to_string(),
-                }
-            }
+        match self
+            .property_repository
+            .add_new_property(new_property_request)
+            .await
+        {
+            Ok((property_id, image_option)) => AddNewPropertyResponse::Successful {
+                property_id,
+                image_option,
+            },
+            Err(err) => AddNewPropertyResponse::Unsuccessful {
+                error_message: err.to_string(),
+            },
         }
     }
 }
@@ -115,4 +111,33 @@ pub async fn update_description(
                 ))
             },
         )
+}
+
+#[cfg(test)]
+pub mod property_service_should {
+    use crate::{
+        models::domain::property::PropertyPartial,
+        repositories::property_repository::MockIsPropertyRepository,
+    };
+
+    use super::{PropertyService, IsPropertyService};
+
+    #[tokio::test]
+    pub async fn call_property_repository() {
+        let mut mock_repo = MockIsPropertyRepository::new();
+        mock_repo
+            .expect_get_property_partials()
+            .once()
+            .returning(|| {
+                Box::pin(async move {
+                    Ok(vec![PropertyPartial {
+                        id: "test_id".to_string(),
+                        name: "test_name".to_string(),
+                        image: "test_image".to_string(),
+                    }])
+                })
+            });
+        let property_service = PropertyService::new(mock_repo);
+        let _ = property_service.get_property_partials().await;
+    }
 }

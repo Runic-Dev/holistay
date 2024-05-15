@@ -11,6 +11,6 @@ pub enum GetPropertyPartialsResponse {
 }
 
 pub enum AddNewPropertyResponse {
-    Successful { property_id: String },
+    Successful { property_id: String, image_option: Option<String> },
     Unsuccessful { error_message: String }
 }

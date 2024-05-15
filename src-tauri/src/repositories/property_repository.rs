@@ -7,11 +7,10 @@ use base64::engine::general_purpose;
 use base64::Engine;
 use sqlx::{Sqlite, SqlitePool};
 use std::fs;
-use std::future::Future;
-use std::pin::Pin;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use uuid::Uuid;
+use mockall::automock;
 
 pub struct PropertyRepository {
     conn_pool: Arc<Mutex<SqlitePool>>,
@@ -23,66 +22,52 @@ impl PropertyRepository {
     }
 }
 
-pub trait IsPropertyRepository: Send + Sync {
-    fn get_property_partials(
-        &'_ self,
-    ) -> Pin<Box<dyn Future<Output = Result<Vec<PropertyPartial>, sqlx::Error>> + Send + '_>>;
+#[cfg_attr(test, automock)]
+pub trait IsPropertyRepository {
+    fn get_property_partials(&self) -> impl std::future::Future<Output = Result<Vec<PropertyPartial>, sqlx::Error>> + Send;
     fn add_new_property(
         &self,
         new_property_request: AddNewPropertyRequest,
-    ) -> Pin<Box<dyn Future<Output = Result<String, sqlx::Error>> + Send + '_>>;
-    fn get_property(
-        &self,
-        property_id: String,
-    ) -> Pin<Box<dyn Future<Output = Result<Option<Property>, sqlx::Error>> + Send + '_>>;
+    ) -> impl std::future::Future<Output = Result<(String, Option<String>), sqlx::Error>> + Send;
+    fn get_property(&self, property_id: String) -> impl std::future::Future<Output = Result<Option<Property>, sqlx::Error>> + Send;
     fn update_description(
         &self,
         new_property_desc_request: NewDescriptionRequest,
-    ) -> Pin<Box<dyn Future<Output = Result<(String, String), sqlx::Error>> + Send + '_>>;
+    ) -> impl std::future::Future<Output = Result<(String, String), sqlx::Error>> + Send;
 }
 
 impl IsPropertyRepository for PropertyRepository {
-    fn get_property_partials(
-        &self,
-    ) -> Pin<Box<dyn Future<Output = Result<Vec<PropertyPartial>, sqlx::Error>> + Send + '_>> {
-        Box::pin(async move {
-            let pool_lock = self.conn_pool.lock().await;
-            sqlx::query_as::<Sqlite, PropertyPartial>("SELECT id, name, image FROM property")
-                .fetch_all(&*pool_lock)
-                .await
-        })
+    async fn get_property_partials(&self) -> Result<Vec<PropertyPartial>, sqlx::Error> {
+        let pool_lock = self.conn_pool.lock().await;
+        sqlx::query_as::<Sqlite, PropertyPartial>("SELECT id, name, image FROM property")
+            .fetch_all(&*pool_lock)
+            .await
     }
 
-    fn add_new_property(
+    async fn add_new_property(
         &self,
         new_property_request: AddNewPropertyRequest,
-    ) -> Pin<Box<dyn Future<Output = Result<String, sqlx::Error>> + Send + '_>> {
-        Box::pin(async move {
-            let pool_lock = self.conn_pool.lock().await;
-            let id = Uuid::new_v4();
-            let image = match fs::read(new_property_request.image)
-                .map(|image_file| general_purpose::STANDARD.encode(image_file))
-            {
-                Ok(encoded) => Some(encoded),
-                Err(_) => None,
-            };
-            sqlx::query("INSERT INTO property (id, name, image) VALUES (?, ?, ?)")
-                .bind(id.to_string())
-                .bind(new_property_request.name)
-                .bind(image)
-                .execute(&*pool_lock)
-                .await
-                .map(|_| id.to_string())
-        })
+    ) -> Result<(String, Option<String>), sqlx::Error> {
+        let pool_lock = self.conn_pool.lock().await;
+        let id = Uuid::new_v4();
+        let image = match fs::read(new_property_request.image)
+            .map(|image_file| general_purpose::STANDARD.encode(image_file))
+        {
+            Ok(encoded) => Some(encoded),
+            Err(_) => None,
+        };
+        sqlx::query("INSERT INTO property (id, name, image) VALUES (?, ?, ?)")
+            .bind(id.to_string())
+            .bind(new_property_request.name)
+            .bind(&image)
+            .execute(&*pool_lock)
+            .await
+            .map(|_| (id.to_string(), image))
     }
 
-    fn get_property(
-        &self,
-        property_id: String,
-    ) -> Pin<Box<dyn Future<Output = Result<Option<Property>, sqlx::Error>> + Send + '_>> {
-        Box::pin(async move {
-            let pool_lock = self.conn_pool.lock().await;
-            match sqlx::query_as::<Sqlite, PropertyRoomGroupRoomRow>(
+    async fn get_property(&self, property_id: String) -> Result<Option<Property>, sqlx::Error> {
+        let pool_lock = self.conn_pool.lock().await;
+        match sqlx::query_as::<Sqlite, PropertyRoomGroupRoomRow>(
                 "
 SELECT p.id as property_id, p.name as property_name, p.image as property_image, p.description as property_description,
 rg.id as room_group_id, rg.name as room_group_name, rg.image as room_group_image,
@@ -111,29 +96,26 @@ ON p.id = rg.property_id LEFT OUTER JOIN room r ON rg.id = r.room_group_id WHERE
                     Err(err)
                 },
             }
-        })
     }
 
-    fn update_description(
+    async fn update_description(
         &self,
         new_property_desc_request: NewDescriptionRequest,
-    ) -> Pin<Box<dyn Future<Output = Result<(String, String), sqlx::Error>> + Send + '_>> {
-        Box::pin(async move {
-            let pool_lock = self.conn_pool.lock().await;
-            sqlx::query("UPDATE property SET description = ? WHERE id = ?")
-                .bind(&new_property_desc_request.description)
-                .bind(&new_property_desc_request.id)
-                .execute(&*pool_lock)
-                .await
-                .map_or_else(
-                    |err| Err(err),
-                    |_| {
-                        Ok((
-                            new_property_desc_request.id,
-                            new_property_desc_request.description,
-                        ))
-                    },
-                )
-        })
+    ) -> Result<(String, String), sqlx::Error> {
+        let pool_lock = self.conn_pool.lock().await;
+        sqlx::query("UPDATE property SET description = ? WHERE id = ?")
+            .bind(&new_property_desc_request.description)
+            .bind(&new_property_desc_request.id)
+            .execute(&*pool_lock)
+            .await
+            .map_or_else(
+                |err| Err(err),
+                |_| {
+                    Ok((
+                        new_property_desc_request.id,
+                        new_property_desc_request.description,
+                    ))
+                },
+            )
     }
 }

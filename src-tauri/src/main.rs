@@ -4,14 +4,12 @@
 #![warn(clippy::nursery)]
 
 use std::sync::Arc;
-use sqlx::SqlitePool;
-use tauri::{Builder, generate_handler, Manager, Runtime, Wry};
+use tauri::Manager;
 use tokio::sync::Mutex;
 use crate::command_handler::CommandInitializer;
 use crate::event_system::events::{HolistayEvent, init_event_handler, listen_to_frontend};
-use crate::models::domain::property::Property;
 use crate::repositories::property_repository::PropertyRepository;
-use crate::services::property_service::{IsPropertyService, PropertyService};
+use crate::services::property_service::PropertyService;
 
 pub mod event_system;
 mod models;
@@ -25,7 +23,7 @@ mod repositories;
 
 pub struct AppState {
     event_sender: tokio::sync::mpsc::Sender<HolistayEvent>,
-    property_service: Mutex<PropertyService>
+    property_service: PropertyService<PropertyRepository>
 }
 #[tokio::main]
 async fn main() {
@@ -37,7 +35,7 @@ async fn main() {
             }
             let (tx, rx) = tokio::sync::mpsc::channel::<HolistayEvent>(32);
             let wrapped_pool = Arc::new(Mutex::from(pool));
-            let property_repository = Arc::new(Mutex::from(PropertyRepository::new(wrapped_pool.clone())));
+            let property_repository = PropertyRepository::new(wrapped_pool.clone());
             let property_service = PropertyService::new(property_repository);
 
             tauri::Builder::default()

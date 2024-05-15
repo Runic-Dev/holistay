@@ -13,8 +13,7 @@ use tauri::{command, generate_handler, Builder, Runtime, State};
 pub async fn get_property_partials(
     state: State<'_, AppState>,
 ) -> Result<Vec<PropertyPartial>, String> {
-    let property_service_lock = state.property_service.lock().await;
-    match property_service_lock.get_property_partials().await {
+    match state.property_service.get_property_partials().await {
         GetPropertyPartialsResponse::Successful { property_partials } => Ok(property_partials),
         GetPropertyPartialsResponse::Unsuccessful { error_message } => Err(error_message),
     }
@@ -24,8 +23,7 @@ pub async fn get_property(
     state: State<'_, AppState>,
     request: GetPropertyRequest,
 ) -> Result<Value, String> {
-    let property_service_lock = state.property_service.lock().await;
-    match property_service_lock
+    match state.property_service
         .get_property(request.property_id)
         .await
     {
@@ -38,10 +36,12 @@ pub async fn get_property(
 pub async fn add_new_property(
     state: State<'_, AppState>,
     request: AddNewPropertyRequest,
-) -> Result<String, String> {
-    let property_service_lock = state.property_service.lock().await;
-    match property_service_lock.add_new_property(request).await {
-        AddNewPropertyResponse::Successful { property_id} => Ok(property_id),
+) -> Result<Value, String> {
+    match state.property_service.add_new_property(request).await {
+        AddNewPropertyResponse::Successful { property_id, image_option} => Ok(json!({
+            "propertyId": property_id,
+            "imageOption": image_option
+        })),
         AddNewPropertyResponse::Unsuccessful { error_message } => Err(error_message),
     }
 }
