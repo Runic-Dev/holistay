@@ -31,6 +31,7 @@
 </MainLayout>
 
 <style lang="scss">
+  @import "./styles.css";
     .main-dashboard {
         .top-bar {
             display: flex;

@@ -6,7 +6,7 @@ use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::sync::Mutex;
 use crate::event_system::config::config::configure_event_handler;
 use crate::event_system::handlers;
-use crate::models::requests::{GetPropertyRequest, GetRoomGroupsRequest, GetRoomsRequest, LoginRegisterRequest, NewDescriptionRequest, AddNewPropertyRequest, NewRoomGroupRequest, NewRoomRequest};
+use crate::models::requests::{GetPropertyRequest, LoginRegisterRequest, NewDescriptionRequest, AddNewPropertyRequest, NewRoomGroupRequest, NewRoomRequest};
 
 use crate::models::user::User;
 

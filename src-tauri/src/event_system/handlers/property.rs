@@ -1,4 +1,4 @@
-use tauri::{App, command, Manager};
+use tauri::{App, Manager};
 use tokio::sync::mpsc::Sender;
 use crate::event_system::events::HolistayEvent;
 use crate::models::requests::{GetPropertyRequest, NewDescriptionRequest, AddNewPropertyRequest};

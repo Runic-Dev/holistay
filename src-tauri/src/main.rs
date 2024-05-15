@@ -22,7 +22,6 @@ mod command_handler;
 mod repositories;
 
 pub struct AppState {
-    event_sender: tokio::sync::mpsc::Sender<HolistayEvent>,
     property_service: PropertyService<PropertyRepository>
 }
 #[tokio::main]
@@ -39,7 +38,7 @@ async fn main() {
             let property_service = PropertyService::new(property_repository);
 
             tauri::Builder::default()
-                .manage(AppState { event_sender: tx.clone(), property_service })
+                .manage(AppState { property_service })
                 .configure_commands()
                 .setup(move |app| {
                     listen_to_frontend(app, tx);

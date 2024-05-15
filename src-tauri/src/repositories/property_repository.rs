@@ -10,6 +10,8 @@ use std::fs;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use uuid::Uuid;
+
+#[cfg(test)]
 use mockall::automock;
 
 pub struct PropertyRepository {

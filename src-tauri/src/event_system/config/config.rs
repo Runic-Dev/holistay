@@ -7,7 +7,6 @@ use tauri::{AppHandle, Manager};
 use tokio::sync::Mutex;
 use crate::event_system::events::HolistayEvent;
 use crate::models::auth::{LoggedInUser, RegisteredUser};
-use crate::models::domain::property::Property;
 
 use crate::services::{auth_service, property_service, room_group_service, room_service};
 
