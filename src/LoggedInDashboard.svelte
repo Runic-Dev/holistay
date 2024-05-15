@@ -8,6 +8,8 @@
   import { propertyStore } from "./store";
   import { invoke } from "@tauri-apps/api/tauri";
   import type { PropertyPartial } from "@/models/PropertyPartial";
+  import * as Alert from "$lib/components/ui/alert";
+  import { Terminal } from "lucide-svelte";
 
   $: properties = [];
   let addingNewProperty = false;
@@ -58,6 +60,15 @@
 
 <div class="properties-overview">
   <h2 class="underline">Select your property:</h2>
+
+  <Alert.Root>
+    <Terminal class="h-4 w-4" />
+    <Alert.Title>Hello Hotel man!</Alert.Title>
+    <Alert.Description
+      >Your daughter was givin' 'im the salmon!</Alert.Description
+    >
+  </Alert.Root>
+
   <div class="property-overview-container">
     {#each properties as property}
       <Tile tileConfig={propertyToTileConfig(property)} />

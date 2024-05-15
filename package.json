@@ -12,6 +12,11 @@
   },
   "dependencies": {
     "@tauri-apps/api": "^1.2.0",
+    "bits-ui": "^0.21.7",
+    "clsx": "^2.1.1",
+    "lucide-svelte": "^0.378.0",
+    "tailwind-merge": "^2.3.0",
+    "tailwind-variants": "^0.2.1",
     "tauri-plugin-log-api": "github:tauri-apps/tauri-plugin-log",
     "uuid": "^9.0.1"
   },
@@ -24,7 +29,7 @@
     "autoprefixer": "^10.4.19",
     "postcss": "^8.4.38",
     "sass": "^1.67.0",
-    "svelte": "^3.54.0",
+    "svelte": "latest",
     "svelte-check": "^3.0.0",
     "svelte-preprocess": "^5.0.0",
     "svelte-spa-router": "^3.3.0",
