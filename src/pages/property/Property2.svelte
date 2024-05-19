@@ -1,26 +1,23 @@
 <script lang="ts">
-  import type {
-    TileConfig,
-  } from "src/types";
-  import { TileType } from "@/enums/ui";
-  import MainLayout from "@/MainLayout.svelte";
-  import RoomGroupComponent from "@/pages/property/RoomGroup.svelte";
   import { onMount } from "svelte";
-  import Tile from "@/common/Tile.svelte";
-  import { addBase64HtmlSyntax } from "@/utils/index";
+  import { Button } from "$lib/components/ui/button";
+  import { Label } from "$lib/components/ui/label";
+  import { Input } from "$lib/components/ui/input";
+  import * as Card from "$lib/components/ui/card";
+  import MainLayout from "@/MainLayout.svelte";
   import { propertyStore } from "@/store";
   import { emit } from "@tauri-apps/api/event";
-  import { DescribableEntity } from "@/common/types";
-  import { invoke } from "@tauri-apps/api/tauri";
   import type { Property } from "@/models/Property";
-  import Description from "@/common/Description.svelte";
+  import type { TileConfig } from "src/types";
+  import { invoke } from "@tauri-apps/api";
+  import { addBase64HtmlSyntax } from "@/utils";
+  // import { TileType } from "@/enums/ui";
 
   export let params: { propertyId: string };
-
   export let addingNewRoomGroup: boolean = false;
+  let newRoomGroupName: string = "";
 
   $: property = null;
-
   $: roomGroupSummary = "Loading...";
 
   function toggleNewRoomGroup() {
@@ -78,34 +75,49 @@
     header={property.name}
     imageUrl={addBase64HtmlSyntax(property.image, "jpeg")}
   >
-    <div class="manage-property">
-      <div class="room-groups-controls">
-        <h4 class="room-group-summary">{roomGroupSummary}</h4>
-        <button on:click={toggleNewRoomGroup} class="add-room-group">
-          Add RoomGroup
-        </button>
+    <div class="manage-property p-4 bg-gray-100 rounded-lg">
+      <div class="room-groups-controls flex justify-between items-center mb-4">
+        <h4 class="room-group-summary text-xl font-semibold">
+          {roomGroupSummary}
+        </h4>
+        <Button on:click={toggleNewRoomGroup} variant="outline"
+          >Add RoomGroup</Button
+        >
       </div>
-      <Description
-        type={DescribableEntity.Property}
-        id={property.id}
-        description={property.description ?? "No description"}
-      />
-      <div class="room-groups content-container">
+      <div
+        class="room-groups grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+      >
         {#if property.roomGroups}
           {#each property.roomGroups as roomGroup}
-            <RoomGroupComponent {roomGroup} propertyId={params.propertyId} />
+            <Card.Root class="w-full sm:w-64 lg:w-80">
+              <Card.Header>
+                <Card.Title>{roomGroup.name}</Card.Title>
+              </Card.Header>
+              <Card.Content>
+                <img
+                  src="./roomgroupplaceholder.png"
+                  alt={property.name}
+                  class="w-full h-32 object-cover rounded-md"
+                />
+              </Card.Content>
+            </Card.Root>
           {/each}
         {/if}
         {#if addingNewRoomGroup}
-          <Tile
-            tileConfig={{
-              type: TileType.NewRoomGroup,
-              title: null,
-              image: null,
-              clickAction: null,
-            }}
-            on:confirmedRoomGroup={addNewRoomGroup}
-          />
+          <Card.Root class="w-full sm:w-64 lg:w-80">
+            <Card.Header>
+              <Card.Title>Create New Room Group</Card.Title>
+            </Card.Header>
+            <Card.Content>
+              <Label for="roomGroupName">Room Group Name</Label>
+              <Input
+                bind:value={newRoomGroupName}
+                id="roomGroupName"
+                type="text"
+              />
+              <Button>Confirm</Button>
+            </Card.Content>
+          </Card.Root>
         {/if}
       </div>
     </div>
@@ -114,24 +126,16 @@
 
 <style lang="scss">
   @import "src/lib/app.scss";
-
   .manage-property {
+    @apply p-4 bg-gray-100 rounded-lg;
     .room-groups-controls {
-      h4 {
-        margin: $padding 0;
+      @apply flex justify-between items-center mb-4;
+      h4.room-group-summary {
+        @apply text-xl font-semibold;
       }
-
-      margin: $padding * 2;
     }
-
     .room-groups {
-      text-align: left;
-      display: flex;
-      flex-wrap: wrap;
-    }
-
-    h4.room-group-summary {
-      font-size: 2.5rem;
+      @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4;
     }
   }
 </style>

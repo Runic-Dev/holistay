@@ -61,16 +61,28 @@
   });
 </script>
 
-<div class="properties-overview p-4 bg-gray-100">
-  <div class="property-overview-container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+<div
+  class="properties-overview h-screen w-screen flex flex-col p-4 bg-gray-100"
+>
+  <div
+    class="property-overview-container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+  >
     {#each properties as property}
       <Card.Root class="w-full sm:w-64 lg:w-80">
         <Card.Header>
           <Card.Title>{property.name}</Card.Title>
         </Card.Header>
         <Card.Content>
-          <img src={handleImageEncodingForHtml(property.image)} alt={property.name} class="w-full h-32 object-cover rounded-md" />
-          <Button on:click={() => push(`/property/${property.id}`)}>View Property</Button>
+          <img
+            src={handleImageEncodingForHtml(property.image)}
+            alt={property.name}
+            class="w-full h-32 object-cover rounded-md"
+          />
+          <Button
+            class="my-4"
+            on:click={() => push(`/property/${property.id}`)}
+            >View Property</Button
+          >
         </Card.Content>
       </Card.Root>
     {/each}
@@ -85,7 +97,9 @@
       </Card.Root>
     {/if}
   </div>
-  <Button on:click={() => (addingNewProperty = !addingNewProperty)} class="mt-4">Add New Property</Button>
+  <Button on:click={() => (addingNewProperty = !addingNewProperty)} class="mt-4"
+    >Add New Property</Button
+  >
 </div>
 
 <style lang="scss">
@@ -94,7 +108,7 @@
     display: flex;
     flex-direction: column;
     background: lightgray;
-    border-radius: 16px;
+    // border-radius: 16px;
     padding: 16px;
     color: black;
 

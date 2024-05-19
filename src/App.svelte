@@ -1,6 +1,6 @@
 <script lang="ts">
   import WelcomeScreen from "./WelcomeScreen.svelte";
-  import Property from "./pages/property/Property.svelte";
+  import Property2 from "./pages/property/Property2.svelte";
   import RoomGroup from "./pages/roomgroup/RoomGroup.svelte";
   import Router from "svelte-spa-router";
   import Room from "./pages/room/Room.svelte";
@@ -15,7 +15,7 @@
   setContext<BackendHandler>("backendHandler", handler);
   const routes = {
     "/": WelcomeScreen,
-    "/property/:propertyId": Property,
+    "/property/:propertyId": Property2,
     "/property/:propertyId/roomgroup/:roomGroupId": RoomGroup,
     "/property/:propertyId/roomgroup/:roomGroupId/room/:roomId": Room,
     "*": WelcomeScreen,
