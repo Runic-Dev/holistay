@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { Button } from "$lib/components/ui/button";
+  import * as Breadcrumb from "$lib/components/ui/breadcrumb";
   import { Label } from "$lib/components/ui/label";
   import { Input } from "$lib/components/ui/input";
   import * as Popover from "$lib/components/ui/popover";
@@ -11,13 +12,13 @@
   import type { Property } from "@/models/Property";
   import type { TileConfig } from "src/types";
   import { invoke } from "@tauri-apps/api";
-  import { addBase64HtmlSyntax } from "@/utils";
+  import { handleImageEncodingForHtml } from "$lib/utils";
 
   export let params: { propertyId: string };
   export let addingNewRoomGroup: boolean = false;
   let newRoomGroupName: string = "";
 
-  $: property = null;
+  $: property = null satisfies Property;
   $: roomGroupSummary = "Loading...";
 
   function toggleNewRoomGroup() {
@@ -50,6 +51,7 @@
         roomGroupSummary = `${property.name} has 0 room groups`;
       }
       property = { ...property };
+      console.log(property);
     });
     await invoke("get_property", {
       request: { property_id: params.propertyId },
@@ -71,11 +73,30 @@
 </script>
 
 {#if property}
-  <MainLayout
-    header={property.name}
-    imageUrl={addBase64HtmlSyntax(property.image, "jpeg")}
-  >
-    <div class="manage-property p-4 bg-gray-100 rounded-lg">
+  <MainLayout>
+    <div
+      class="header-image"
+      style="background-image: url({handleImageEncodingForHtml(
+        property.image,
+      )});"
+    ></div>
+    <Breadcrumb.Root class="p-4">
+      <Breadcrumb.List>
+        <Breadcrumb.Item>
+          <Breadcrumb.Link href="/">Properties</Breadcrumb.Link>
+        </Breadcrumb.Item>
+        <Breadcrumb.Separator />
+        <Breadcrumb.Page>
+          <Breadcrumb.Link>{property.name}</Breadcrumb.Link>
+        </Breadcrumb.Page>
+      </Breadcrumb.List>
+    </Breadcrumb.Root>
+    <div
+      style="background-image: url({handleImageEncodingForHtml(
+        property.image,
+      )}); background-color: rgba(255,255,255,0.7); background-blend-mode: lighten;"
+      class="header-image manage-property p-4 bg-gray-100 rounded-lg"
+    >
       <div class="room-groups-controls flex justify-between items-center mb-4">
         <h4 class="room-group-summary text-xl font-semibold">
           {roomGroupSummary}
@@ -84,9 +105,12 @@
           <Popover.Trigger>Add Room Group</Popover.Trigger>
           <Popover.Content>
             <Label for="newRoomGroupName">New Room Group</Label>
-            <Input class="my-2" placeholder="Name" id="newRoomGroupName"></Input>
+            <Input class="my-2" placeholder="Name" id="newRoomGroupName"
+            ></Input>
             <Label for="newRoomGroupImage">Image</Label>
-            <Input id="newRoomGroupImage" class="my-2" type="file">RoomGroup Image</Input>
+            <Input id="newRoomGroupImage" class="my-2" type="file"
+              >RoomGroup Image</Input
+            >
             <Button class="my-2">Confirm</Button>
           </Popover.Content>
         </Popover.Root>
@@ -143,6 +167,12 @@
 
 <style lang="scss">
   @import "src/lib/app.scss";
+  .header-image {
+    background-size: cover;
+    background-color: rgba(255, 255, 255, 0.5);
+    // background-blend-mode: soft-light;
+    backdrop-filter: blur(5px);
+  }
   .manage-property {
     @apply p-4 bg-gray-100 rounded-lg;
     .room-groups-controls {

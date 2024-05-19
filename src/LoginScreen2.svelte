@@ -36,16 +36,15 @@
     isLogin = !isLogin;
   }
 
-  function submitForm() {
+  async function submitForm() {
     let event_name = isLogin ? "login_attempt" : "register_attempt";
-    emit(event_name, {
+    await emit(event_name, {
       username,
       password,
       stay_logged_in: stayLoggedIn,
     });
   }
   onMount(async () => {
-    // TODO: Reconsider multiple listens in the frontend
     await listen("user_registered", (event) => {
       console.log("user_registered");
       userStore.set({

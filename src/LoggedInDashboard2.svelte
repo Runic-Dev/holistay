@@ -9,6 +9,8 @@
   import type { PropertyPartial } from "@/models/PropertyPartial";
   import type { ConfirmedPropertyToSend, TileConfig } from "./types";
   import { TileType } from "./enums/ui";
+  import { handleImageEncodingForHtml } from "$lib/utils";
+    import PropertyCard from "./common/PropertyCard.svelte";
 
   $: properties = [];
   let addingNewProperty = false;
@@ -34,9 +36,6 @@
       .catch((err: string) => console.error(err));
   }
 
-  function handleImageEncodingForHtml(imageString: string): string {
-    return `data:image/jpeg;base64,${imageString}`;
-  }
 
   function propertyToTileConfig(property: Property) {
     return {
@@ -68,23 +67,7 @@
     class="property-overview-container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
   >
     {#each properties as property}
-      <Card.Root class="w-full sm:w-64 lg:w-80">
-        <Card.Header>
-          <Card.Title>{property.name}</Card.Title>
-        </Card.Header>
-        <Card.Content>
-          <img
-            src={handleImageEncodingForHtml(property.image)}
-            alt={property.name}
-            class="w-full h-32 object-cover rounded-md"
-          />
-          <Button
-            class="my-4"
-            on:click={() => push(`/property/${property.id}`)}
-            >View Property</Button
-          >
-        </Card.Content>
-      </Card.Root>
+      <PropertyCard {property} />
     {/each}
     {#if addingNewProperty}
       <Card.Root>
