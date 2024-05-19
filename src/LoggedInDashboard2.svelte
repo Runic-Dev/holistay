@@ -4,7 +4,7 @@
   import * as Card from "$lib/components/ui/card";
   import { push } from "svelte-spa-router";
   import { invoke } from "@tauri-apps/api/tauri";
-  import { propertyStore } from "./store";
+  import { propertyStore, displayTopBarStore } from "./store";
   import { Property } from "./models/Property";
   import type { PropertyPartial } from "@/models/PropertyPartial";
   import type { ConfirmedPropertyToSend, TileConfig } from "./types";
@@ -47,6 +47,7 @@
   }
 
   onMount(async () => {
+    displayTopBarStore.set(true);
     await invoke("get_property_partials")
       .then((property_partials: PropertyPartial[]) => {
         propertyStore.subscribe((ps) => (properties = ps.properties));

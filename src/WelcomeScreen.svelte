@@ -7,9 +7,10 @@
     import { emit, listen } from "@tauri-apps/api/event";
     import type User from "./models/User";
 
-    $: loggedInUser = $userStore.user;
+    $: loggedInUser = null;
 
     onMount(async () => {
+      userStore.subscribe(us => loggedInUser = us.user);
       await listen<InitResponse>("init_response", (event) => {
         userStore.set(event.payload);
       });

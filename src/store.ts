@@ -10,6 +10,8 @@ export const propertyStore = writable<PropertyStore>({
   properties: []
 });
 
+export const displayTopBarStore = writable<boolean>(false);
+
 type UserStore = {
   user: User | null
 }

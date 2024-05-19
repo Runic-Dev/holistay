@@ -1,10 +1,33 @@
 <script lang="ts">
-  import { push } from "svelte-spa-router";
-  import { userStore } from "./store";
-  export let header: string | null = null;
-  export let imageUrl: string | null = null;
+  import { userStore, displayTopBarStore } from "./store";
+  import * as Avatar from "$lib/components/ui/avatar";
+    import { onMount } from "svelte";
   $: username = $userStore.user ? $userStore.user["name"] : null;
+  $: topBar = false;
+
+  onMount(() => {
+    userStore.subscribe(us => {
+
+    });
+    displayTopBarStore.subscribe(x => topBar = x);
+  })
 </script>
+
+<div class="">
+  {#if topBar}
+  <div class="top-bar">
+    <h1>{username}</h1>
+
+    {#if username != null}
+      <Avatar.Root>
+        <Avatar.Image src=""/>
+        <Avatar.Fallback>CN</Avatar.Fallback>
+      </Avatar.Root>
+    {/if}
+  </div>
+  {/if}
+  <slot {topBar} />
+</div>
 
 <!-- <div class="main-dashboard"> -->
 <!--   <div class="top-bar" class:splash-topbar={header}> -->
@@ -52,8 +75,6 @@
 <!--     </div> -->
 <!--   </div> -->
 <!-- </div> -->
-
-<slot />
 
 <style lang="scss">
   @import "./src/lib/app.scss";

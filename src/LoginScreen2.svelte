@@ -38,6 +38,10 @@
 
   async function submitForm() {
     let event_name = isLogin ? "login_attempt" : "register_attempt";
+    console.log(`Event name: ${event_name}`);
+    console.log(`Username: ${username}`);
+    console.log(`Password: ${password}`);
+    console.log(`Stay logged in?: ${stayLoggedIn}`);
     await emit(event_name, {
       username,
       password,
@@ -46,7 +50,6 @@
   }
   onMount(async () => {
     await listen("user_registered", (event) => {
-      console.log("user_registered");
       userStore.set({
         user: {
           id: event.payload["id"],
@@ -55,7 +58,6 @@
       });
     });
     await listen("user_logged_in", (event) => {
-      console.log("user_logged_in");
       userStore.set({
         user: {
           id: event.payload["id"],
@@ -91,14 +93,14 @@
 
         {#if canSubmit}
           <Button
-            type="submit"
+            type="button"
             class="form-button bg-blue-500"
             on:click={submitForm}>Login</Button
           >
         {:else}
           <Button
             disabled
-            type="submit"
+            type="button"
             class="form-button bg-blue-500"
             on:click={submitForm}>Login</Button
           >
@@ -135,14 +137,14 @@
         />
         {#if canSubmit}
           <Button
-            type="submit"
+            type="button"
             class="form-button bg-blue-500"
             on:click={submitForm}>Register</Button
           >
         {:else}
           <Button
             disabled
-            type="submit"
+            type="button"
             class="form-button bg-blue-500"
             on:click={submitForm}>Register</Button
           >
