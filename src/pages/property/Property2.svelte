@@ -3,6 +3,7 @@
   import { Button } from "$lib/components/ui/button";
   import { Label } from "$lib/components/ui/label";
   import { Input } from "$lib/components/ui/input";
+  import * as Popover from "$lib/components/ui/popover";
   import * as Card from "$lib/components/ui/card";
   import MainLayout from "@/MainLayout.svelte";
   import { propertyStore } from "@/store";
@@ -11,7 +12,6 @@
   import type { TileConfig } from "src/types";
   import { invoke } from "@tauri-apps/api";
   import { addBase64HtmlSyntax } from "@/utils";
-  // import { TileType } from "@/enums/ui";
 
   export let params: { propertyId: string };
   export let addingNewRoomGroup: boolean = false;
@@ -80,9 +80,26 @@
         <h4 class="room-group-summary text-xl font-semibold">
           {roomGroupSummary}
         </h4>
-        <Button on:click={toggleNewRoomGroup} variant="outline"
-          >Add RoomGroup</Button
-        >
+        <Popover.Root>
+          <Popover.Trigger>Add Room Group</Popover.Trigger>
+          <Popover.Content>
+            <Label for="newRoomGroupName">New Room Group</Label>
+            <Input class="my-2" placeholder="Name" id="newRoomGroupName"></Input>
+            <Label for="newRoomGroupImage">Image</Label>
+            <Input id="newRoomGroupImage" class="my-2" type="file">RoomGroup Image</Input>
+            <Button class="my-2">Confirm</Button>
+          </Popover.Content>
+        </Popover.Root>
+        <Popover.Root>
+          <Popover.Trigger>Add Room</Popover.Trigger>
+          <Popover.Content>
+            <Label for="newRoomName">New Room Group</Label>
+            <Input class="my-2" placeholder="Name" id="newRoomName"></Input>
+            <Label for="newRoomImage">Image</Label>
+            <Input id="newRoomImage" class="my-2" type="file">Room Image</Input>
+            <Button class="my-2">Confirm</Button>
+          </Popover.Content>
+        </Popover.Root>
       </div>
       <div
         class="room-groups grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
