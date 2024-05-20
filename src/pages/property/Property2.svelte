@@ -13,6 +13,7 @@
   import type { TileConfig } from "src/types";
   import { invoke } from "@tauri-apps/api";
   import { handleImageEncodingForHtml } from "$lib/utils";
+    import { push } from "svelte-spa-router";
 
   export let params: { propertyId: string };
   export let addingNewRoomGroup: boolean = false;
@@ -82,8 +83,8 @@
     ></div>
     <Breadcrumb.Root class="p-4">
       <Breadcrumb.List>
-        <Breadcrumb.Item>
-          <Breadcrumb.Link href="/">Properties</Breadcrumb.Link>
+        <Breadcrumb.Item link="/"}>
+          Properties
         </Breadcrumb.Item>
         <Breadcrumb.Separator />
         <Breadcrumb.Page>
