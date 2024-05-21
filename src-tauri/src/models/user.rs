@@ -12,7 +12,7 @@ use crate::models::responses::{HasHolistayResponse, HolistayResponse};
 #[derive(Clone, Debug)]
 pub struct User {
     pub id: Uuid,
-    pub username: String,
+    pub name: String,
 }
 
 impl FromRow<'_, SqliteRow> for User {
@@ -23,7 +23,7 @@ impl FromRow<'_, SqliteRow> for User {
 
         Ok(Self {
             id,
-            username: row.try_get("username")?,
+            name: row.try_get("username")?,
         })
     }
 }
@@ -31,13 +31,13 @@ impl FromRow<'_, SqliteRow> for User {
 impl User {
     pub const fn new(id: Uuid, username: String) -> Self {
         Self {
-            id, username
+            id, name: username
         }
     }
     pub fn from_user_row(user_row: UserRow) -> Result<User, uuid::Error> {
         Ok(Self {
             id: Uuid::parse_str(&user_row.id)?,
-            username: user_row.username
+            name: user_row.name
         })
     }
 }
@@ -50,7 +50,7 @@ impl Serialize for User {
         let mut state = serializer.serialize_struct("User", 2)?;
 
         state.serialize_field("id", &self.id.to_string())?;
-        state.serialize_field("username", &self.username)?;
+        state.serialize_field("name", &self.name)?;
 
         state.end()
     }
@@ -98,7 +98,7 @@ impl<'de> Visitor<'de> for UserVisitor {
         let id = id.ok_or_else(|| de::Error::missing_field("id"))?;
         let username = username.ok_or_else(|| de::Error::missing_field("username"))?;
 
-        Ok(User { id, username })
+        Ok(User { id, name: username })
     }
 }
 
@@ -120,6 +120,6 @@ impl HasHolistayResponse<User> for Option<User> {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UserRow {
     pub id: String,
-    pub username: String
+    pub name: String
 }
 

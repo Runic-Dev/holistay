@@ -44,7 +44,7 @@ pub async fn configure_event_handler(mut rx: Receiver<HolistayEvent>, mutex_pool
                     .map_or_else( 
                         |err| { println!("{err:?}") }, 
                         |user| { let _ = 
-                            app_handle.emit_all("user_logged_in", LoggedInUser { username: user.username }); }) 
+                            app_handle.emit_all("user_logged_in", LoggedInUser { username: user.name }); }) 
             }
             HolistayEvent::NewProperty(new_property_request) => {
                 let pool_lock = mutex_pool.lock().await;

@@ -90,7 +90,7 @@ impl FromRow<'_, SqliteRow> for UserRow {
     fn from_row(row: &'_ SqliteRow) -> Result<Self, sqlx::Error> {
         Ok(Self {
             id: row.try_get("id")?,
-            username: row.try_get("username")?
+            name: row.try_get("username")?
         })
     }
 }
