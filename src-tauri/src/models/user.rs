@@ -86,17 +86,17 @@ impl<'de> Visitor<'de> for UserVisitor {
                         }
                     }
                 }
-                "username" => {
+                "name" => {
                     if username.is_some() {
-                        return Err(de::Error::duplicate_field("username"));
+                        return Err(de::Error::duplicate_field("name"));
                     }
                     username = Some(map.next_value()?);
                 }
-                _ => return Err(de::Error::unknown_field(key, &["id", "username"])),
+                _ => return Err(de::Error::unknown_field(key, &["id", "name"])),
             }
         }
         let id = id.ok_or_else(|| de::Error::missing_field("id"))?;
-        let username = username.ok_or_else(|| de::Error::missing_field("username"))?;
+        let username = username.ok_or_else(|| de::Error::missing_field("name"))?;
 
         Ok(User { id, name: username })
     }

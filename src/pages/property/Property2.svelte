@@ -83,12 +83,12 @@
     ></div>
     <Breadcrumb.Root class="p-4">
       <Breadcrumb.List>
-        <Breadcrumb.Item link="/"}>
+        <Breadcrumb.Item link="/">
           Properties
         </Breadcrumb.Item>
         <Breadcrumb.Separator />
         <Breadcrumb.Page>
-          <Breadcrumb.Link>{property.name}</Breadcrumb.Link>
+          <Breadcrumb.Item>{property.name}</Breadcrumb.Item>
         </Breadcrumb.Page>
       </Breadcrumb.List>
     </Breadcrumb.Root>
