@@ -21,13 +21,13 @@
   };
 </script>
 
-<MainLayout>
-  {#if $userStore.user}
+{#if $userStore.user}
+  <MainLayout>
     <LoggedInDashboard />
-  {:else}
-    <LoginScreen />
-  {/if}
-</MainLayout>
+  </MainLayout>
+{:else}
+  <LoginScreen />
+{/if}
 
 <style lang="scss">
   @import "./styles.css";

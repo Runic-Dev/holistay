@@ -1,19 +1,18 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onDestroy, onMount } from "svelte";
   import { Button } from "$lib/components/ui/button";
-  import * as Breadcrumb from "$lib/components/ui/breadcrumb";
   import { Label } from "$lib/components/ui/label";
   import { Input } from "$lib/components/ui/input";
   import * as Popover from "$lib/components/ui/popover";
   import * as Card from "$lib/components/ui/card";
   import MainLayout from "@/MainLayout.svelte";
-  import { propertyStore } from "@/store";
+  import { breadcrumbInfoStore, propertyStore } from "@/store";
   import { emit } from "@tauri-apps/api/event";
   import type { Property } from "@/models/Property";
   import type { TileConfig } from "src/types";
   import { invoke } from "@tauri-apps/api";
   import { handleImageEncodingForHtml } from "$lib/utils";
-    import { push } from "svelte-spa-router";
+    import type { Unsubscriber } from "svelte/motion";
 
   export let params: { propertyId: string };
   export let addingNewRoomGroup: boolean = false;
@@ -27,8 +26,6 @@
   }
 
   function addNewRoomGroup(event: CustomEvent<TileConfig>) {
-    console.log("New Room Group");
-    console.log(event.detail.image);
     let newRoomGroupRequest = {
       name: event.detail.title,
       property_id: property.id,
@@ -43,16 +40,20 @@
     toggleNewRoomGroup();
   }
 
+  let unsubscriber: Unsubscriber;
+
   onMount(async () => {
-    propertyStore.subscribe((x) => {
+    unsubscriber = propertyStore.subscribe((x) => {
       property = x.properties.find((p) => p.id == params.propertyId);
       if (property.roomGroups) {
         roomGroupSummary = `${property.name} has ${property.roomGroups.length} room groups`;
       } else {
         roomGroupSummary = `${property.name} has 0 room groups`;
       }
+      breadcrumbInfoStore.set({
+        propertyName: property["name"],
+      });
       property = { ...property };
-      console.log(property);
     });
     await invoke("get_property", {
       request: { property_id: params.propertyId },
@@ -71,6 +72,10 @@
       })
       .catch((err) => console.error(err));
   });
+
+  onDestroy(() => {
+    unsubscriber();
+  })
 </script>
 
 {#if property}
@@ -81,17 +86,6 @@
         property.image,
       )});"
     ></div>
-    <Breadcrumb.Root class="p-4">
-      <Breadcrumb.List>
-        <Breadcrumb.Item link="/">
-          Properties
-        </Breadcrumb.Item>
-        <Breadcrumb.Separator />
-        <Breadcrumb.Page>
-          <Breadcrumb.Item>{property.name}</Breadcrumb.Item>
-        </Breadcrumb.Page>
-      </Breadcrumb.List>
-    </Breadcrumb.Root>
     <div
       style="background-image: url({handleImageEncodingForHtml(
         property.image,

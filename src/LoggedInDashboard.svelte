@@ -2,7 +2,6 @@
   import { onMount } from "svelte";
   import { Button } from "$lib/components/ui/button";
   import * as Card from "$lib/components/ui/card";
-  import * as Breadcrumb from "$lib/components/ui/breadcrumb";
   import { push } from "svelte-spa-router";
   import { invoke } from "@tauri-apps/api/tauri";
   import { propertyStore, displayTopBarStore } from "./store";
@@ -59,11 +58,6 @@
   });
 </script>
 
-<Breadcrumb.Root class="p-4">
-  <Breadcrumb.List>
-    <Breadcrumb.Page>Properties</Breadcrumb.Page>
-  </Breadcrumb.List>
-</Breadcrumb.Root>
 <div
   class="properties-overview h-screen w-screen flex flex-col p-4 bg-gray-100"
 >

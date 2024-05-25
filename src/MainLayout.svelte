@@ -2,6 +2,7 @@
   import { userStore, displayTopBarStore } from "./store";
   import * as Avatar from "$lib/components/ui/avatar";
   import * as Sheet from "$lib/components/ui/sheet";
+  import BreadcrumbGenerator from "./common/BreadcrumbGenerator.svelte";
   $: username = $userStore.user ? $userStore.user["name"] : null;
   $: displayTopBar = $displayTopBarStore;
 </script>
@@ -27,6 +28,7 @@
       {/if}
     </div>
   {/if}
+  <BreadcrumbGenerator />
   <slot topBar={displayTopBar} />
 </div>
 

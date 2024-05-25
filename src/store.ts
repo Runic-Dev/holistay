@@ -12,10 +12,18 @@ export const propertyStore = writable<PropertyStore>({
 
 export const displayTopBarStore = writable<boolean>(false);
 
+export const breadcrumbInfoStore = writable<BreadcrumbInfoStore>({
+  propertyName: null
+});
+
 type UserStore = {
   user: User | null
 }
 
 type PropertyStore = {
   properties: Property[]
+}
+
+type BreadcrumbInfoStore = {
+  propertyName: string | null;
 }
