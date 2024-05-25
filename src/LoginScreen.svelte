@@ -1,10 +1,13 @@
 <script lang="ts">
+  import { Button } from "$lib/components/ui/button";
+  import { Label } from "$lib/components/ui/label";
+  import { Checkbox } from "$lib/components/ui/checkbox";
   import { emit } from "@tauri-apps/api/event";
   import { onMount } from "svelte";
   import { listen } from "@tauri-apps/api/event";
   import { userStore } from "./store";
 
-  let isRegister = true;
+  let isLogin = true;
 
   let username = "",
     password = "",
@@ -12,17 +15,11 @@
 
   let stayLoggedIn = false;
 
-  $: toggleButtonText = isRegister
-    ? "I already have an account"
-    : "I don't have an account";
-
-  $: submitButtonText = isRegister ? "Register" : "Login";
-
   $: canSubmit = () => {
-    if (isRegister) {
-      username != "" && password != "" && password == repeatPassword;
-    } else {
+    if (isLogin) {
       username != "" && password != "";
+    } else {
+      username != "" && password != "" && password == repeatPassword;
     }
   };
 
@@ -36,21 +33,23 @@
     username = "";
     password = "";
     repeatPassword = "";
-    isRegister = !isRegister;
+    isLogin = !isLogin;
   }
 
-  function submitForm() {
-    let event_name = isRegister ? "register_attempt" : "login_attempt";
-    emit(event_name, {
+  async function submitForm() {
+    let event_name = isLogin ? "login_attempt" : "register_attempt";
+    console.log(`Event name: ${event_name}`);
+    console.log(`Username: ${username}`);
+    console.log(`Password: ${password}`);
+    console.log(`Stay logged in?: ${stayLoggedIn}`);
+    await emit(event_name, {
       username,
       password,
-      "stay_logged_in": stayLoggedIn
+      stay_logged_in: stayLoggedIn,
     });
   }
   onMount(async () => {
-    // TODO: Reconsider multiple listens in the frontend
     await listen("user_registered", (event) => {
-      console.log("user_registered");
       userStore.set({
         user: {
           id: event.payload["id"],
@@ -59,7 +58,6 @@
       });
     });
     await listen("user_logged_in", (event) => {
-      console.log("user_logged_in");
       userStore.set({
         user: {
           id: event.payload["id"],
@@ -73,76 +71,127 @@
   });
 </script>
 
-<div class="init-screen">
-  <h1>Welcome to Holistay</h1>
-  <div class="starter-form">
-    <h2>Your solution for looking after your properties</h2>
-    <p>Register as a user or login using the form below</p>
-
-    {#if isRegister}
-      <div class="register form">
-        <label for="register-username">Username</label>
-        <input id="register-username" bind:value={username} type="text" />
-        <label for="register-password">Password</label>
-        <input id="register-password" bind:value={password} type="password" />
-        <label for="register-repeat-password">Repeat Password</label>
+<div class="form-container">
+  <div class="form-card">
+    {#if isLogin}
+      <h2 class="text-2xl mb-4">Login</h2>
+      <form>
         <input
-          id="register-repeat-password"
-          class:red-highlight={redField}
-          bind:value={repeatPassword}
-          type="password"
+          bind:value={username}
+          type="text"
+          placeholder="Username"
+          class="form-input"
+          required
         />
+        <input
+          bind:value={password}
+          type="password"
+          placeholder="Password"
+          class="form-input"
+          required
+        />
+
+        {#if canSubmit}
+          <Button
+            type="button"
+            class="form-button bg-blue-500"
+            on:click={submitForm}>Login</Button
+          >
+        {:else}
+          <Button
+            disabled
+            type="button"
+            class="form-button bg-blue-500"
+            on:click={submitForm}>Login</Button
+          >
+        {/if}
+        <Checkbox bind:checked={stayLoggedIn} />
+      </form>
+      <div class="mt-4">
+        <Button class="oauth-button bg-red-500">Sign in with Google</Button>
       </div>
+      <p class="mt-4">
+        Don't have an account? <a
+          href="#"
+          on:click={toggleForm}
+          class="text-blue-500">Register</a
+        >
+      </p>
     {:else}
-      <div class="login form">
-        <label for="login-username">Username</label>
-        <input id="login-username" bind:value={username} type="text" />
-        <label for="login-password">Password</label>
-        <input id="login-password" bind:value={password} type="password" />
+      <h2 class="text-2xl mb-4">Register</h2>
+      <form>
+        <input type="text" placeholder="Username" class="form-input" required />
+        <input
+          bind:value={username}
+          type="password"
+          placeholder="Password"
+          class="form-input"
+          required
+        />
+        <input
+          bind:value={password}
+          type="password"
+          placeholder="Repeat Password"
+          class="form-input"
+          required
+        />
+        {#if canSubmit}
+          <Button
+            type="button"
+            class="form-button bg-blue-500"
+            on:click={submitForm}>Register</Button
+          >
+        {:else}
+          <Button
+            disabled
+            type="button"
+            class="form-button bg-blue-500"
+            on:click={submitForm}>Register</Button
+          >
+        {/if}
+        <Checkbox id="stayLoggedIn" bind:checked={stayLoggedIn} />
+        <Label
+          id="stayLoggedInLabel"
+          for="stayLoggedIn"
+          class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+        >
+          Stay logged in
+        </Label>
+      </form>
+      <div class="mt-4">
+        <Button class="oauth-button bg-red-500">Sign up with Google</Button>
       </div>
+      <p class="mt-4">
+        Already have an account? <a
+          href="#"
+          on:click={toggleForm}
+          class="text-blue-500">Login</a
+        >
+      </p>
     {/if}
-
-    <label for="stay-logged-in">Stay logged in?</label>
-    <input id="stay-logged-in" bind:checked={stayLoggedIn} on:click={() => console.log(stayLoggedIn)} type="checkbox" />
-
-    <button on:click={toggleForm}>{toggleButtonText}</button>
-    <button
-      disabled={!canSubmit}
-      class:disabled={!canSubmit}
-      on:click={submitForm}>{submitButtonText}</button
-    >
   </div>
 </div>
 
 <style lang="scss">
-  .init-screen {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-
-    .starter-form {
-      background-color: rgba(0, 100, 250, 0.7);
-      padding: 15px;
-      max-width: 50%;
-      border-radius: 15px;
-
-      .disabled {
-        color: grey;
-        &:hover {
-          border: none;
-        }
-      }
-
-      .red-highlight {
-        border: solid 1px red;
-      }
-
-      .form {
-        display: flex;
-        justify-content: center;
-        flex-direction: column;
-      }
+  .form-container {
+    @apply flex flex-col items-center justify-center min-h-screen bg-gray-100;
+  }
+  .form-card {
+    @apply bg-white p-8 rounded-lg shadow-md w-full max-w-md;
+  }
+  .form-input {
+    @apply mb-4 p-2 border border-gray-300 rounded;
+  }
+  .form-button {
+    @apply bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700;
+  }
+  .oauth-button {
+    @apply bg-red-500 text-white py-2 px-4 rounded hover:bg-red-700;
+  }
+  .disabled {
+    color: grey;
+    &:hover {
+      border: none;
     }
   }
 </style>

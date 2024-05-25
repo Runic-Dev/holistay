@@ -1,8 +1,8 @@
 <script lang="ts">
   import MainLayout from "./MainLayout.svelte";
-  import LoginScreen2 from "./LoginScreen2.svelte";
+  import LoginScreen from "./LoginScreen.svelte";
   import { userStore } from "./store";
-  import LoggedInDashboard2 from "./LoggedInDashboard2.svelte";
+  import LoggedInDashboard from "./LoggedInDashboard.svelte";
   import { onMount } from "svelte";
   import { emit, listen } from "@tauri-apps/api/event";
   import type User from "./models/User";
@@ -23,9 +23,9 @@
 
 <MainLayout>
   {#if $userStore.user}
-    <LoggedInDashboard2 />
+    <LoggedInDashboard />
   {:else}
-    <LoginScreen2 />
+    <LoginScreen />
   {/if}
 </MainLayout>
 
