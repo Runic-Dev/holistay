@@ -40,10 +40,10 @@
     toggleNewRoomGroup();
   }
 
-  let unsubscriber: Unsubscriber;
+  let unsubscribers: Unsubscriber[] = [];
 
   onMount(async () => {
-    unsubscriber = propertyStore.subscribe((x) => {
+    unsubscribers.push(propertyStore.subscribe((x) => {
       property = x.properties.find((p) => p.id == params.propertyId);
       if (property.roomGroups) {
         roomGroupSummary = `${property.name} has ${property.roomGroups.length} room groups`;
@@ -54,7 +54,7 @@
         propertyName: property["name"],
       });
       property = { ...property };
-    });
+    }));
     await invoke("get_property", {
       request: { property_id: params.propertyId },
     })
@@ -74,7 +74,7 @@
   });
 
   onDestroy(() => {
-    unsubscriber();
+    unsubscribers.forEach(subscriber => subscriber());
   })
 </script>
 

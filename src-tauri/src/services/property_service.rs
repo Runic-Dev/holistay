@@ -11,8 +11,13 @@ use tokio::sync::MutexGuard;
 use uuid::Uuid;
 
 pub trait IsPropertyService {
-    fn get_property(&self, property_id: String) -> impl std::future::Future<Output = GetPropertiesResponse> + Send;
-    fn get_property_partials(&self) -> impl std::future::Future<Output = GetPropertyPartialsResponse> + Send;
+    fn get_property(
+        &self,
+        property_id: String,
+    ) -> impl std::future::Future<Output = GetPropertiesResponse> + Send;
+    fn get_property_partials(
+        &self,
+    ) -> impl std::future::Future<Output = GetPropertyPartialsResponse> + Send;
     fn add_new_property(
         &self,
         new_property_request: AddNewPropertyRequest,
@@ -120,7 +125,7 @@ pub mod property_service_should {
         repositories::property_repository::MockIsPropertyRepository,
     };
 
-    use super::{PropertyService, IsPropertyService};
+    use super::{IsPropertyService, PropertyService};
 
     #[tokio::test]
     pub async fn call_property_repository() {
